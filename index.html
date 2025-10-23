@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AD — Distribución Confiable</title>
+  <link rel="icon" href="logo-ad-distribucion.jpg" />
+  <style>
+    :root{
+      --bg:#000;
+      --text:#fff;
+      --accent:#0b66ff; /* azul botones */
+      --card:#0d0d0d;
+      --muted:#cfcfcf;
+    }
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter, Arial, sans-serif}
+    header{display:flex;align-items:center;gap:16px;padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.03)}
+    .logo{display:flex;align-items:center;gap:12px}
+    .logo img{height:48px}
+    .site-title{font-size:20px;font-weight:700}
+    .slogan{font-size:13px;color:var(--muted)}
+    main{display:flex;gap:24px;padding:20px;max-width:1200px;margin:0 auto}
+    .left{flex:1}
+    .controls{display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+    .category-btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:8px;color:var(--text);cursor:pointer}
+    .category-btn.active{background:var(--accent);color:#fff}
+    .products{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+    .card{background:var(--card);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);display:flex;flex-direction:column;gap:8px}
+    .gallery{position:relative;overflow:hidden;border-radius:8px;height:200px;display:flex;align-items:center;justify-content:center;background:#070707}
+    .gallery img{max-width:100%;max-height:100%;object-fit:contain}
+    .gallery .nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.45);padding:6px;border-radius:6px;cursor:pointer}
+    .nav.left{left:8px} .nav.right{right:8px}
+    .product-name{font-weight:700}
+    .price{font-weight:800;color:var(--accent);font-size:18px}
+    .actions{display:flex;gap:8px;margin-top:auto;align-items:center}
+    button.add{background:var(--accent);border:none;padding:8px 12px;border-radius:8px;color:#fff;cursor:pointer}
+    button.view{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:8px;color:var(--text);cursor:pointer}
+    /* Cart */
+    .cart-btn{margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:8px;color:var(--text);cursor:pointer}
+    .cart-panel{position:fixed;right:20px;top:80px;width:360px;max-height:75vh;background:var(--card);border-radius:10px;padding:12px;overflow:auto;border:1px solid rgba(255,255,255,0.04)}
+    .cart-item{display:flex;gap:8px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.02);padding:8px 0}
+    .cart-item img{width:60px;height:50px;object-fit:cover;border-radius:6px}
+    .cart-total{font-weight:800;text-align:right;margin-top:8px;color:var(--accent)}
+    .btn-primary{background:var(--accent);color:#fff;padding:10px;border-radius:8px;border:none;cursor:pointer;width:100%}
+    /* Modal (form) */
+    .modal-back{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:20px}
+    .modal{background:#0b0b0b;border-radius:10px;padding:18px;width:640px;max-width:100%;border:1px solid rgba(255,255,255,0.03)}
+    .form-row{display:flex;gap:8px}
+    .form-row .col{flex:1}
+    label{display:block;font-size:13px;margin-bottom:6px;color:var(--muted)}
+    input,select,textarea{width:100%;padding:10px;border-radius:8px;background:#0a0a0a;border:1px solid rgba(255,255,255,0.04);color:var(--text)}
+    .whatsapp-row{display:flex;gap:8px;margin-top:10px}
+    .whatsapp-row button{flex:1;padding:10px;border-radius:8px;border:none;cursor:pointer}
+    .whatsapp-e{background:#25D366;color:#fff} /* whatsapp green */
+    .whatsapp-l{background:#128C7E;color:#fff}
+    /* responsive */
+    @media(max-width:880px){main{flex-direction:column;padding:12px}.cart-panel{position:static;width:100%;max-height:300px}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <img src="logo-ad-distribucion.png" alt="AD logo">
+      <div>
+        <div class="site-title">AD</div>
+        <div class="slogan">Distribución Confiable</div>
+      </div>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <button class="cart-btn" id="openCartBtn">Carrito (<span id="cartCount">0</span>)</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="left">
+      <div class="controls">
+        <div>Filtrar por categoría:</div>
+        <div id="categories"></div>
+        <button class="category-btn" id="clearFilter">Mostrar todo</button>
+      </div>
+
+      <div class="products" id="products"></div>
+    </div>
+
+    <!-- cart panel -->
+    <div id="cartPanel" class="cart-panel" style="display:none">
+      <h3>Carrito</h3>
+      <div id="cartItems"></div>
+      <div class="cart-total">Total: $<span id="cartTotal">0</span></div>
+      <div style="margin-top:10px">
+        <button class="btn-primary" id="openFormBtn">Rellenar formulario</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal: form -->
+  <div id="modalBack" class="modal-back">
+    <div class="modal">
+      <h3>Formulario de envío</h3>
+      <form id="orderForm">
+        <div class="form-row">
+          <div class="col">
+            <label>Nombre y apellido</label>
+            <input required name="nombre" />
+          </div>
+          <div class="col">
+            <label>Teléfono</label>
+            <input required name="telefono" />
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:8px">
+          <div class="col">
+            <label>Dirección o lugar de entrega</label>
+            <input required name="direccion" />
+          </div>
+          <div class="col">
+            <label>Código Postal</label>
+            <input required name="cp" />
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:8px">
+          <div class="col">
+            <label>Provincia</label>
+            <input required name="provincia" />
+          </div>
+          <div class="col">
+            <label>Ciudad</label>
+            <input required name="ciudad" />
+          </div>
+        </div>
+
+        <div style="margin-top:8px">
+          <label>Indicaciones para la entrega (opcional)</label>
+          <textarea name="indicaciones" rows="2"></textarea>
+        </div>
+
+        <div style="margin-top:8px">
+          <label>Tipo de domicilio</label>
+          <div style="display:flex;gap:12px;margin-top:6px">
+            <label><input type="radio" name="tipo" value="Residencial" checked /> Residencial</label>
+            <label><input type="radio" name="tipo" value="Laboral" /> Laboral</label>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button type="submit" class="btn-primary">Confirmar datos</button>
+          <button type="button" id="closeModal" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text);padding:10px;border-radius:8px">Cancelar</button>
+        </div>
+      </form>
+
+      <!-- WhatsApp buttons appear after confirm -->
+      <div id="whatsappBtns" style="display:none;margin-top:12px">
+        <div style="font-size:14px;color:var(--muted);margin-bottom:8px">Enviar pedido por WhatsApp a:</div>
+        <div class="whatsapp-row">
+          <button id="waEze" class="whatsapp-e">Ezequiel</button>
+          <button id="waLuc" class="whatsapp-l">Lucas</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**************************************
+     * Datos de productos (extraídos del archivo listado)
+     * Si querés actualizar precios o imágenes editá este array.
+     **************************************/
+    const PRODUCTS = [
+      /* AURICULARES */
+      {id:'aur1', category:'AURICULARES', name:'AURICULAR INALAMBRICO E6S', price:16000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/e6s-df2f72d0a449b503d917594143142980-480-0.webp']},
+      {id:'aur2', category:'AURICULARES', name:'AURICULAR MOD89 – ST', price:20000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/16661918244b576ecfa22715ad290d0d37b749dd25-916ebcee2ff6149f9e17564084995704-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/1666191830580f31bca1bb26ec6865b696f44e0129-2ebd29ff834aa4a3ca17564084994026-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/1666191847f91588faa9b1b11bd79a093e6c988cbe-18846a0951d393756917564084995584-1024-1024.webp']},
+      {id:'aur3', category:'AURICULARES', name:'AURICULAR BLUETOOTH INALÁMBRICO (M20 PRO)', price:26000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/m20proauric-3377716d417753eedb17561503679201-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/alien-photoroom-png-photoroom-15b778a4cf04e9e27517428210229024-1024-1024-1f228898cc5657889517561503684439-1024-1024.webp']},
+      {id:'aur4', category:'AURICULARES', name:'AURICULAR BLUETOOTH INALÁMBRICO (M100)', price:16000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/m100auri-d3284240a8bba1031d17561500768252-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/6-3-8c3e59ace8b2dd5c7717561500767550-1024-1024.webp']},
+      {id:'aur5', category:'AURICULARES', name:'AURICULAR BLUETOOTH INALÁMBRICO (M66 PRO)', price:18000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/m66pro1-e42a23fff27b552ed217561502867406-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/m66pro3-b6b92e4d72f2df616e17561502659642-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/m66pro2-5a74775d71bfa77c1b17561502659224-1024-1024.webp']},
+      {id:'aur6', category:'AURICULARES', name:'AURICULAR BLUETOOTH INALÁMBRICO (M19-PRO)', price:16000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/m19proauri-93f325d5fb95ee30fc17561504806051-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/m19proauri1-6c87aa9f4973ac0aa517561504805845-1024-1024.webp']},
+      {id:'aur7', category:'AURICULARES', name:'AURICULAR MANOS LIBRES EMOCION (MOD 001)', price:6000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/1723932361620221b8b79e5e3edd60859edac83a16-91292c41e57a3763f317564071516967-480-0.webp']},
+      {id:'aur8', category:'AURICULARES', name:'AURICULARES INALAMBRICOS 165', price:18000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/img_20250121_151204993-244c9813902af28dab17374849217338-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/i65-16c4f18f2614c2e49e17369482857130-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/i65-1-5f3c067435f80f245017369482854863-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/i65-4-3fbe40a2c26e21274217369482856510-1024-1024.webp']},
+
+      /* PARLANTES */
+      {id:'par1', category:'PARLANTES', name:'MINI PARLANTE PORTATIL GO3 (AT-2108)', price:35000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/at-2108-cae20051a040ec2e8517607099830274-640-0.webp']},
+      {id:'par2', category:'PARLANTES', name:'PARLANTE T5', price:16000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/1653052996ad1e9b9be400e37ee3b1dadaa5ba7961-1cabd727499d386fe917508746712426-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/speaker-bt-colors-t3_10809_t3_4-9f4b5de64efdb3621d17508746715824-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/1653053388d3219a26dc8b6545a2cb92531e51c950-c507aa951c6fd911b317508746714571-1024-1024.webp']},
+      {id:'par3', category:'PARLANTES', name:'PARLANTE BLUETOOTH 3\" LED ( MOD 908)', price:22000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/1747941065c185015917b186fb2e27f924fc5ac97e-aa8336f29cbb11691e17508751171070-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/710ee21d05173398b660432510aabe3555176394a57e9d621d4a741f2c129831173743-db8fd9ad3a658a9cbc17508751089280-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/6df28cd9b3a5643b491c3815d6ca24d126c5881e30c08c81a8e0270e62073e38173743-0a2ad5d5ee77f012e617508751088900-1024-1024.webp']},
+      {id:'par4', category:'PARLANTES', name:'PARLANTE BLUETOOTH 4\" (MOD X3)', price:22000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/4-a1b22cf3631a68cea817575922714318-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/whatsapp-image-2025-08-28-at-14-13-44-3-a36efe49aae232fce317564035823087-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/whatsapp-image-2025-08-28-at-14-13-41-5-76186a1e204e38bf6317564035823417-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/3202-a4cb117409868b1c3e17508748931356-1024-1024.webp']},
+
+      /* CABLES Y CARGADORES */
+      {id:'cab1', category:'CABLES Y CARGADORES', name:'CABLE USB IPHONE 5A 1M', price:5000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/1-728c812e2c4be3e30a17585640967621-1024-1024.png']},
+      {id:'cab2', category:'CABLES Y CARGADORES', name:'CARGADOR DE AUTO USB + C', price:8000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/ac02-92df4f64ccd0e02b6c17606410655974-640-0.webp']},
+      {id:'cab3', category:'CABLES Y CARGADORES', name:'CARGADOR IBEK 2.6A - V8', price:8000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/ib-2601-8b27dbcb5b7e523e7917607045697576-480-0.webp']},
+      {id:'cab4', category:'CABLES Y CARGADORES', name:'CARGADOR 3.1A V8 - 2 USB IBEK', price:10000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/17-eb268debe1e58b6c8b17607071333512-1024-1024.webp']},
+      {id:'cab5', category:'CABLES Y CARGADORES', name:'CABLE USB IPHONE 1 METRO', price:8000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/sp0392-8dcd4f53dce423ad2017606407563170-640-0.webp']},
+      {id:'cab6', category:'CABLES Y CARGADORES', name:'CARGADOR RAPIDO IBEK 5.8A - IPHONE', price:16000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/ib-5807-7607ad783afd01d6d617606427730742-480-0.webp']},
+      {id:'cab7', category:'CABLES Y CARGADORES', name:'CARGADOR MAGNETICO 3 EN 1', price:40000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/acc0024-8304bb9a3b8fece61417594932381323-480-0.webp']},
+      {id:'cab8', category:'CABLES Y CARGADORES', name:'CARGADOR PORTÁTIL 20000MAH CARGA RÁPIDA 4 EN 1 CON LINTERNA', price:40000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/diseno-sin-titulo-a4c1d039b0716e4c7a17583013865561-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/13903694-d78a-46ff-9c12-ce2ca525187c-7839720a1dfb3a875817583013860562-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/f84af292-6f23-4cfb-92b6-6f9a842b063b-4d4cae27aefaf44f7217583013862014-1024-1024.webp']},
+      {id:'cab9', category:'CABLES Y CARGADORES', name:'ADAPTADOR USB 20W TIPO C', price:40000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/20w-tyc-3e4e528b25b03c86ff17580481042749-640-0.webp']},
+      {id:'cab10', category:'CABLES Y CARGADORES', name:'CARGADOR PORTATIL 10.000 MAH IBEK', price:25000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/17166781754e3068ced2175a4a74300a2152604b5d-webp-540a74adcb17eee20217521570011169-1024-1024.jpg','https://acdn-us.mitiendanube.com/stores/004/109/063/products/17166781855f0faacf880f2201b2d39d9903dc5d00-webp-a7749f7fde9a4a945e17521570024205-1024-1024.jpg']},
+      {id:'cab11', category:'CABLES Y CARGADORES', name:'CARGADOR 220V MODO-018 4.8A - RUSH - 1USB + CABLE TIPO v8', price:10000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/1740056726d6e0ac407dffaa03450d8682778e4992-c57f1657c5dea47fe117543084565358-1024-1024.webp']},
+      {id:'cab12', category:'CABLES Y CARGADORES', name:'CARGADOR 220V MODO-018 4.8A - RUSH - 1USB + CABLE TIPO v8 (2)', price:10000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/3-48630b466f5611730017373945545822-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/4-36572fbd185e53608b17170795982284-1024-1024.webp']},
+
+      /* SMARTWATCH */
+      {id:'sw1', category:'SMARTWATCH', name:'SMARTWATCH I7 BRACELET', price:25000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/blanc-007-e0375080bd688a596917442875916983-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/blanc-022-1f9f3e408ff01a6d8217442875918863-480-0.webp']},
+      {id:'sw2', category:'SMARTWATCH', name:'SMARTWATCH I8 PRO MAX', price:28000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/d_nq_np_804260-mla80375985181_112024-o-a837831682757f79dd17345488328780-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/45-74f821221b534e013417374010286000-1024-1024.webp']},
+      {id:'sw3', category:'SMARTWATCH', name:'SMARTWATCH T20 ULTRA', price:45000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/24098-1-84c786b605f188d79f17241818779582-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/smartwatch-t20-ultra-e0165ce2f5be3c6ce517401644592057-1024-1024.webp']},
+      {id:'sw4', category:'SMARTWATCH', name:'SMARTWATCH T500 ULTIMATE', price:45000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/1000-1-71632d4213d2b62ea017544190555692-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/1000-d8d5d3ca4e5f17fe6e17544190555575-1024-1024.webp']},
+      {id:'sw5', category:'SMARTWATCH', name:'SMARTWATCH INTELIGENTE CON 7 MALLAS + AURICULAR', price:60000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/zt11smart-9f4969152a01bddfa417544039156176-1024-1024.webp']},
+
+      /* VARIADOS */
+      {id:'var1', category:'PRODUCTOS VARIADOS', name:'MAQUINA DE COSER - (S0124)', price:50000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/copia-de-diseno-sin-titulo-3-8b9f684a5e13d68abb17594998501133-1024-1024.webp']},
+      {id:'var2', category:'PRODUCTOS VARIADOS', name:'SMART TV BOX ULTRA HD 8K', price:60000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/d5b5120c-9957-4d27-9814-9c2da6d50557-684cae7a20dc19a4a017610693180264-1024-1024.png']},
+      {id:'var3', category:'PRODUCTOS VARIADOS', name:'RELOJ DESPERTADOR HORIZONTAL DIGITAL', price:16000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/b212ch3-e3b076450833824f8517594133711234-480-0.webp']},
+      {id:'var4', category:'PRODUCTOS VARIADOS', name:'TECLADO CON CABLE (MOD FV-500)', price:16000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/16451981364200e1940b50056b9d3db9afa11460d3-1-jpg-4047c4f49dfe24b3fd17551959434824-1024-1024.webp']},
+      {id:'var5', category:'PRODUCTOS VARIADOS', name:'MINI PROYECTOR (YG600)', price:85000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/1-1-9ab469cb82ab98712c17425016960899-1024-1024.webp']},
+      {id:'var6', category:'PRODUCTOS VARIADOS', name:'PENDRIVE 64GB', price:25000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/17467111269c91bbd1f18dad4170e9721314fd6155-1d4e3274aca092e00b17551958151638-1024-1024.webp']},
+      {id:'var7', category:'PRODUCTOS VARIADOS', name:'PALO SELFIE CON CABLE', price:16000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/sel01-7f97f62da78989274917580517411620-1024-1024.webp']},
+      {id:'var8', category:'PRODUCTOS VARIADOS', name:'RACK ZAPATOS PLEGABLE X4', price:30000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/cb-506-1918bcb715ac1c7ecc17594298215227-640-0.webp']},
+      {id:'var9', category:'PRODUCTOS VARIADOS', name:'FLOR DE DUCHA RGB', price:40000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/copia-de-diseno-sin-titulo-6-10e66dda94cab93b7f17594338968336-1024-1024.webp']},
+      {id:'var10', category:'PRODUCTOS VARIADOS', name:'WAFFLERA ANTIADHERENTE ORYX (SIB07)', price:70000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/diseno-sin-titulo-1-7184068649cec9185517607302197581-1024-1024.webp']},
+      {id:'var11', category:'PRODUCTOS VARIADOS', name:'SANDWICHERA ANTIADHERENTE', price:60000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/6383-968608f60b1a70caf917580347726552-480-0.webp']},
+      {id:'var12', category:'PRODUCTOS VARIADOS', name:'PAVA ELECTRICA HERVIDORA 2L ACERO INOXIDABLE', price:40000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/copia-de-diseno-sin-titulo-8-574bb0182e1af1471517606380005327-1024-1024.webp']},
+    ];
+
+    // teléfonos WhatsApp (formato wa.me: country + number without + or dashes)
+    const WHA_EZE = '5491130489686'; // Ezequiel
+    const WHA_LUC = '5491176123282'; // Lucas
+
+    /**********************
+     * Render productos y categorías
+     **********************/
+    const productsContainer = document.getElementById('products');
+    const categoriesContainer = document.getElementById('categories');
+    const cartCountEl = document.getElementById('cartCount');
+    const cartPanel = document.getElementById('cartPanel');
+    const openCartBtn = document.getElementById('openCartBtn');
+    const cartItemsEl = document.getElementById('cartItems');
+    const cartTotalEl = document.getElementById('cartTotal');
+    const openFormBtn = document.getElementById('openFormBtn');
+    const modalBack = document.getElementById('modalBack');
+    const orderForm = document.getElementById('orderForm');
+    const whatsappBtns = document.getElementById('whatsappBtns');
+    const waEzeBtn = document.getElementById('waEze');
+    const waLucBtn = document.getElementById('waLuc');
+    const closeModalBtn = document.getElementById('closeModal');
+    const clearFilterBtn = document.getElementById('clearFilter');
+
+    // obtené categorías únicas
+    const CATS = [...new Set(PRODUCTS.map(p=>p.category))];
+    let activeCat = null;
+
+    function renderCategories(){
+      categoriesContainer.innerHTML = '';
+      CATS.forEach(cat=>{
+        const b = document.createElement('button');
+        b.className='category-btn';
+        b.textContent = cat;
+        b.onclick = ()=>{ activeCat = cat; document.querySelectorAll('.category-btn').forEach(n=>n.classList.remove('active')); b.classList.add('active'); renderProducts(); }
+        categoriesContainer.appendChild(b);
+      });
+    }
+    clearFilterBtn.addEventListener('click', ()=>{
+      activeCat = null;
+      document.querySelectorAll('.category-btn').forEach(n=>n.classList.remove('active'));
+      renderProducts();
+    });
+
+    function renderProducts(){
+      productsContainer.innerHTML='';
+      const list = activeCat ? PRODUCTS.filter(p=>p.category===activeCat) : PRODUCTS;
+      list.forEach(p=>{
+        const card = document.createElement('div'); card.className='card';
+        // gallery
+        const gallery = document.createElement('div'); gallery.className='gallery';
+        const img = document.createElement('img'); img.src = p.images[0];
+        gallery.appendChild(img);
+
+        if(p.images.length>1){
+          const left = document.createElement('div'); left.className='nav left'; left.textContent='‹';
+          const right = document.createElement('div'); right.className='nav right'; right.textContent='›';
+          let idx = 0;
+          left.onclick = ()=>{ idx = (idx-1 + p.images.length)%p.images.length; img.src = p.images[idx]; }
+          right.onclick = ()=>{ idx = (idx+1)%p.images.length; img.src = p.images[idx]; }
+          gallery.appendChild(left); gallery.appendChild(right);
+        }
+        card.appendChild(gallery);
+
+        const name = document.createElement('div'); name.className='product-name'; name.textContent = p.name;
+        const price = document.createElement('div'); price.className='price'; price.textContent = '$' + numberWithDots(p.price);
+        card.appendChild(name);
+        card.appendChild(price);
+
+        const actions = document.createElement('div'); actions.className='actions';
+        const add = document.createElement('button'); add.className='add'; add.textContent='Agregar al carrito';
+        add.onclick = ()=> addToCart(p.id);
+        const view = document.createElement('button'); view.className='view'; view.textContent='Ver';
+        view.onclick = ()=> openQuickView(p);
+        actions.appendChild(add); actions.appendChild(view);
+        card.appendChild(actions);
+
+        productsContainer.appendChild(card);
+      });
+    }
+
+    // quick view (simple)
+    function openQuickView(p){
+      alert(p.name + "\nPrecio: $" + numberWithDots(p.price) + "\nCategoría: " + p.category);
+    }
+
+    /**********************
+     * Carrito (localStorage)
+     **********************/
+    function loadCart(){ return JSON.parse(localStorage.getItem('ad_cart')||'{}'); }
+    function saveCart(c){ localStorage.setItem('ad_cart', JSON.stringify(c)); updateCartUI(); }
+    function addToCart(id){
+      const cart = loadCart();
+      cart[id] = (cart[id]||0) + 1;
+      saveCart(cart);
+    }
+    function removeFromCart(id){
+      const cart = loadCart();
+      delete cart[id];
+      saveCart(cart);
+    }
+    function changeQty(id, qty){
+      const cart = loadCart();
+      if(qty<=0) delete cart[id]; else cart[id] = qty;
+      saveCart(cart);
+    }
+    function updateCartUI(){
+      const cart = loadCart();
+      const entries = Object.entries(cart);
+      cartCountEl.textContent = entries.reduce((s,[_id,q])=>s+q,0);
+      cartItemsEl.innerHTML = '';
+      let total = 0;
+      if(entries.length===0){
+        cartItemsEl.innerHTML = '<div style="color:var(--muted)">El carrito está vacío.</div>';
+      } else {
+        entries.forEach(([id,qty])=>{
+          const prod = PRODUCTS.find(p=>p.id===id);
+          if(!prod) return;
+          const row = document.createElement('div'); row.className='cart-item';
+          const img = document.createElement('img'); img.src = prod.images[0];
+          const info = document.createElement('div'); info.style.flex='1';
+          info.innerHTML = `<div style="font-weight:700">${prod.name}</div><div style="color:var(--muted)">x ${qty} — $${numberWithDots(prod.price)}</div>`;
+          const qtyCtrl = document.createElement('div'); qtyCtrl.style.display='flex'; qtyCtrl.style.flexDirection='column';
+          const inc = document.createElement('button'); inc.textContent = '+'; inc.style.marginBottom='6px';
+          const dec = document.createElement('button'); dec.textContent = '-';
+          inc.onclick = ()=> changeQty(id, qty+1);
+          dec.onclick = ()=> changeQty(id, qty-1);
+          qtyCtrl.appendChild(inc); qtyCtrl.appendChild(dec);
+          const del = document.createElement('button'); del.textContent='Eliminar'; del.style.marginLeft='8px';
+          del.onclick = ()=> removeFromCart(id);
+          row.appendChild(img); row.appendChild(info); row.appendChild(qtyCtrl); row.appendChild(del);
+          cartItemsEl.appendChild(row);
+          total += prod.price * qty;
+        });
+      }
+      cartTotalEl.textContent = numberWithDots(total);
+    }
+
+    openCartBtn.addEventListener('click', ()=>{
+      cartPanel.style.display = cartPanel.style.display==='none'?'block':'none';
+      updateCartUI();
+    });
+
+    // helpers
+    function numberWithDots(x){ return String(x).replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
+
+    // form workflow
+    openFormBtn.addEventListener('click', ()=>{
+      const cart = loadCart();
+      if(Object.keys(cart).length===0){ alert('El carrito está vacío. Agregá productos antes de rellenar el formulario.'); return; }
+      modalBack.style.display='flex';
+      whatsappBtns.style.display='none';
+      document.getElementById('whatsappBtns').style.display='none';
+    });
+
+    closeModalBtn.addEventListener('click', ()=>{ modalBack.style.display='none'; });
+
+    orderForm.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      // show whatsapp buttons with order preview
+      whatsappBtns.style.display='block';
+      document.getElementById('whatsappBtns').style.display='block';
+      alert('Datos confirmados. Elegí a quién enviar por WhatsApp (Ezequiel o Lucas).');
+      // store form data temporarily
+      const fd = new FormData(orderForm);
+      window._orderData = Object.fromEntries(fd.entries());
+    });
+
+    // construir mensaje para wa
+    function buildOrderMessage(empName){
+      const cart = loadCart();
+      const productsList = Object.entries(cart).map(([id,qty])=>{
+        const p = PRODUCTS.find(x=>x.id===id);
+        return `${qty} x ${p.name} — $${numberWithDots(p.price)} (subtotal: $${numberWithDots(p.price*qty)})`;
+      }).join('%0A');
+      const total = Object.entries(cart).reduce((s,[id,qty])=>{
+        const p = PRODUCTS.find(x=>x.id===id); return s + p.price*qty;
+      },0);
+      const d = window._orderData || {};
+      // mensaje legible y con los campos del formulario
+      let msg = `*Nuevo pedido*%0A%0A*Productos:*%0A${productsList}%0A%0A*Total:* $${numberWithDots(total)}%0A%0A*Cliente:* ${encodeURIComponent(d.nombre||'')}%0A*Teléfono:* ${encodeURIComponent(d.telefono||'')}%0A*Dirección:* ${encodeURIComponent(d.direccion||'')}%0A*CP:* ${encodeURIComponent(d.cp||'')}%0A*Provincia:* ${encodeURIComponent(d.provincia||'')}%0A*Ciudad:* ${encodeURIComponent(d.ciudad||'')}%0A*Tipo domicilio:* ${encodeURIComponent(d.tipo||'')}%0A*Indicaciones:* ${encodeURIComponent(d.indicaciones||'')}%0A%0A*Vendedor:* ${empName}%0A%0A*Enviado desde:* AD - Distribución Confiable`;
+      // notá que los line breaks están como %0A y algunos campos ya fueron encodeURIComponent
+      return msg;
+    }
+
+    // botones wa
+    waEzeBtn.addEventListener('click', ()=>{
+      const msg = buildOrderMessage('Ezequiel');
+      const url = `https://wa.me/${WHA_EZE}?text=${msg}`;
+      window.open(url, '_blank');
+    });
+    waLucBtn.addEventListener('click', ()=>{
+      const msg = buildOrderMessage('Lucas');
+      const url = `https://wa.me/${WHA_LUC}?text=${msg}`;
+      window.open(url, '_blank');
+    });
+
+    // init
+    renderCategories();
+    renderProducts();
+    updateCartUI();
+
+    // show cart on load if has items
+    if(Object.keys(loadCart()).length>0) cartPanel.style.display='block';
+
+    // nota: guardamos localmente el carrito para persistencia en navegador
+  </script>
+</body>
+</html>
