@@ -52,7 +52,8 @@
     .whatsapp-row{display:flex;gap:8px;margin-top:10px}
     .whatsapp-row button{flex:1;padding:10px;border-radius:8px;border:none;cursor:pointer}
     .whatsapp-e{background:#25D366;color:#fff} /* whatsapp green */
-    .whatsapp-l{background:#128C7E;color:#fff}
+    .whatsapp-l{background:#ffc107;color:#fff}
+    .whatsapp-j { background:#0078ff; color:#fff; } /* azul intenso para Jesi */
     /* responsive */
     @media(max-width:880px){main{flex-direction:column;padding:12px}.cart-panel{position:static;width:100%;max-height:300px}}
   </style>
@@ -154,8 +155,9 @@
       <div id="whatsappBtns" style="display:none;margin-top:12px">
         <div style="font-size:14px;color:var(--muted);margin-bottom:8px">Enviar pedido por WhatsApp a:</div>
         <div class="whatsapp-row">
-          <button id="waEze" class="whatsapp-e">Ezequiel</button>
-          <button id="waLuc" class="whatsapp-l">Lucas</button>
+  <button id="waEze" class="whatsapp-e">Ezequiel</button>
+  <button id="waLuc" class="whatsapp-l">Lucas</button>
+  <button id="waJes" class="whatsapp-j">Jesi</button>
         </div>
       </div>
     </div>
@@ -222,7 +224,8 @@
     // teléfonos WhatsApp (formato wa.me: country + number without + or dashes)
     const WHA_EZE = '5491130489686'; // Ezequiel
     const WHA_LUC = '5491176123282'; // Lucas
-
+    const WHA_JES = '5491160357535'; // Jesi
+    
     /**********************
      * Render productos y categorías
      **********************/
@@ -414,6 +417,12 @@
       const url = `https://wa.me/${WHA_LUC}?text=${msg}`;
       window.open(url, '_blank');
     });
+      const waJesBtn = document.getElementById('waJes');
+waJesBtn.addEventListener('click', ()=>{
+      const msg = buildOrderMessage('Jesi');
+      const url = `https://wa.me/${WHA_JES}?text=${msg}`;
+      window.open(url, '_blank');
+});
 
     // init
     renderCategories();
@@ -427,3 +436,4 @@
   </script>
 </body>
 </html>
+
