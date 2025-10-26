@@ -51,10 +51,7 @@
     input,select,textarea{width:100%;padding:10px;border-radius:8px;background:#0a0a0a;border:1px solid rgba(255,255,255,0.04);color:var(--text)}
     .whatsapp-row{display:flex;gap:8px;margin-top:10px}
     .whatsapp-row button{flex:1;padding:10px;border-radius:8px;border:none;cursor:pointer}
-    .whatsapp-a { background:#ff3b30; color:#fff; } /* rojo para Agustín */
-    .whatsapp-e{background:#25D366;color:#fff} /* verde claro para Ezequiel */
-    .whatsapp-l{background:#ffc107;color:#fff} /* amarillo para Lucas */
-    .whatsapp-j { background:#0078ff; color:#fff; } /* azul intenso para id class */
+    .whatsapp-a { background:#25D366; color:#fff; } /* rojo para Agustín */
     @media(max-width:500px){
   .whatsapp-row{flex-direction:column;}
 } /* ← cerrar esta llave antes de la siguiente media query */
@@ -163,9 +160,6 @@
         <div style="font-size:14px;color:var(--muted);margin-bottom:8px">Enviar pedido por WhatsApp a:</div>
         <div class="whatsapp-row">
   <button id="waAgu" class="whatsapp-a">Agustín</button>
-  <button id="waEze" class="whatsapp-e">Ezequiel</button>
-  <button id="waLuc" class="whatsapp-l">Lucas</button>
-  <button id="waJes" class="whatsapp-j">Jesi</button>
        </div>
       </div>
     </div>
@@ -500,10 +494,6 @@
 
     // teléfonos WhatsApp
     const WHA_AGU = '5492352441553'; // Agustin
-    const WHA_EZE = '5491130489686'; // Ezequiel
-    const WHA_LUC = '5491176123282'; // Lucas
-    const WHA_JES = '5491160357535'; // Jesi
-    
     /**********************
      * Render productos y categorías
      **********************/
@@ -770,9 +760,6 @@ function cumpleCompraMinima() {
  **************************************/
 const waButtons = [
   { id: 'waAgu', name: 'Agustin', number: WHA_AGU },
-  { id: 'waEze', name: 'Ezequiel', number: WHA_EZE },
-  { id: 'waLuc', name: 'Lucas', number: WHA_LUC },
-  { id: 'waJes', name: 'Jesi', number: WHA_JES }
 ];
 
 waButtons.forEach(({ id, name, number }) => {
