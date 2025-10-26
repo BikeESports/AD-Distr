@@ -206,12 +206,12 @@
       {id:'cab11', category:'CABLES Y CARGADORES', name:'CARGADOR 220V MODO-018 4.8A - RUSH - 1USB + CABLE TIPO v8', price:10000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/1740056726d6e0ac407dffaa03450d8682778e4992-c57f1657c5dea47fe117543084565358-1024-1024.webp']},
       {id:'cab12', category:'CABLES Y CARGADORES', name:'CARGADOR 220V MODO-018 4.8A - RUSH - 1USB + CABLE TIPO v8 (2)', price:10000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/3-48630b466f5611730017373945545822-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/4-36572fbd185e53608b17170795982284-1024-1024.webp']},
 
-      /* SMARTWATCH */
-      {id:'sw1', category:'SMARTWATCH', name:'SMARTWATCH I7 BRACELET', price:25000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/blanc-007-e0375080bd688a596917442875916983-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/blanc-022-1f9f3e408ff01a6d8217442875918863-480-0.webp']},
-      {id:'sw2', category:'SMARTWATCH', name:'SMARTWATCH I8 PRO MAX', price:28000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/d_nq_np_804260-mla80375985181_112024-o-a837831682757f79dd17345488328780-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/45-74f821221b534e013417374010286000-1024-1024.webp']},
-      {id:'sw3', category:'SMARTWATCH', name:'SMARTWATCH T20 ULTRA', price:45000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/24098-1-84c786b605f188d79f17241818779582-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/smartwatch-t20-ultra-e0165ce2f5be3c6ce517401644592057-1024-1024.webp']},
-      {id:'sw4', category:'SMARTWATCH', name:'SMARTWATCH T500 ULTIMATE', price:45000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/1000-1-71632d4213d2b62ea017544190555692-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/1000-d8d5d3ca4e5f17fe6e17544190555575-1024-1024.webp']},
-      {id:'sw5', category:'SMARTWATCH', name:'SMARTWATCH INTELIGENTE CON 7 MALLAS + AURICULAR', price:60000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/zt11smart-9f4969152a01bddfa417544039156176-1024-1024.webp']},
+      /* SMARTWATCHS */
+      {id:'sw1', category:'SMARTWATCHS', name:'SMARTWATCH I7 BRACELET', price:25000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/blanc-007-e0375080bd688a596917442875916983-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/blanc-022-1f9f3e408ff01a6d8217442875918863-480-0.webp']},
+      {id:'sw2', category:'SMARTWATCHS', name:'SMARTWATCH I8 PRO MAX', price:28000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/d_nq_np_804260-mla80375985181_112024-o-a837831682757f79dd17345488328780-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/45-74f821221b534e013417374010286000-1024-1024.webp']},
+      {id:'sw3', category:'SMARTWATCHS', name:'SMARTWATCH T20 ULTRA', price:45000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/24098-1-84c786b605f188d79f17241818779582-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/smartwatch-t20-ultra-e0165ce2f5be3c6ce517401644592057-1024-1024.webp']},
+      {id:'sw4', category:'SMARTWATCHS', name:'SMARTWATCH T500 ULTIMATE', price:45000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/1000-1-71632d4213d2b62ea017544190555692-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/1000-d8d5d3ca4e5f17fe6e17544190555575-1024-1024.webp']},
+      {id:'sw5', category:'SMARTWATCHS', name:'SMARTWATCH INTELIGENTE CON 7 MALLAS + AURICULAR', price:60000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/zt11smart-9f4969152a01bddfa417544039156176-1024-1024.webp']},
 
       /* VARIADOS */
       {id:'var1', category:'PRODUCTOS VARIADOS', name:'MAQUINA DE COSER - (S0124)', price:50000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/copia-de-diseno-sin-titulo-3-8b9f684a5e13d68abb17594998501133-1024-1024.webp']},
@@ -685,7 +685,7 @@ function cumpleCompraMinima() {
   if (entries.length === 0) return false;
 
   // Categorías sujetas a compra mínima
-  const CATS_MIN = ['AURICULARES', 'PARLANTES', 'CABLES Y CARGADORES', 'SMARTWATCH', 'PRODUCTOS VARIADOS'];
+  const CATS_MIN = ['AURICULARES', 'PARLANTES', 'CABLES Y CARGADORES', 'SMARTWATCHS', 'PRODUCTOS VARIADOS'];
 
   let totalRestrictas = 0;
   let tieneRestrictas = false;
@@ -721,7 +721,7 @@ function cumpleCompraMinima() {
 
   // 🚨 Verificar compra mínima solo en categorías específicas
   if(!cumpleCompraMinima()){
-    alert('La compra mínima para productos de las categorías AURICULARES, PARLANTES, CABLES Y CARGADORES, SMARTWATCH o PRODUCTOS VARIADOS debe ser de $60.000 (solo se cuenta el total de esos productos).');
+    alert('La compra mínima para productos de las categorías AURICULARES, PARLANTES, CABLES Y CARGADORES, SMARTWATCHS o PRODUCTOS VARIADOS debe ser de $60.000 (solo se cuenta el total de esos productos).');
     return;
   }
 
