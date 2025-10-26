@@ -563,14 +563,40 @@
         }
         card.appendChild(gallery);
 
-        const name = document.createElement('div'); name.className='product-name'; name.textContent = p.name;
-        const price = document.createElement('div'); price.className='price'; price.textContent = '$' + numberWithDots(p.price);
-        card.appendChild(name);
-        card.appendChild(price);
+       const name = document.createElement('div'); 
+name.className = 'product-name'; 
+name.textContent = p.name;
 
+const price = document.createElement('div'); 
+price.className = 'price'; 
+price.textContent = '$' + numberWithDots(p.price);
+card.appendChild(name);
+card.appendChild(price);
+
+// Si el producto tiene talles, crear selector
+let sizeSelect = null;
+if (p.sizes) {
+  sizeSelect = document.createElement('select');
+  sizeSelect.innerHTML = '<option value="">Seleccionar talle</option>' + 
+    p.sizes.map(t => `<option value="${t}">${t}</option>`).join('');
+  sizeSelect.style.padding = '6px';
+  sizeSelect.style.borderRadius = '6px';
+  sizeSelect.style.background = '#0a0a0a';
+  sizeSelect.style.color = '#fff';
+  sizeSelect.style.border = '1px solid rgba(255,255,255,0.1)';
+  card.appendChild(sizeSelect);
+}
+        
         const actions = document.createElement('div'); actions.className='actions';
         const add = document.createElement('button'); add.className='add'; add.textContent='Agregar al carrito';
-        add.onclick = ()=> addToCart(p.id);
+       add.onclick = ()=> {
+  if (p.sizes && sizeSelect && !sizeSelect.value) {
+    alert('Por favor, seleccioná un talle antes de agregar al carrito.');
+    return;
+  }
+  addToCart(p.id, sizeSelect ? sizeSelect.value : null);
+};
+
         const view = document.createElement('button'); view.className='view'; view.textContent='Ver';
         view.onclick = ()=> openQuickView(p);
         actions.appendChild(add); actions.appendChild(view);
@@ -591,11 +617,13 @@
      **********************/
     function loadCart(){ return JSON.parse(localStorage.getItem('ad_cart')||'{}'); }
     function saveCart(c){ localStorage.setItem('ad_cart', JSON.stringify(c)); updateCartUI(); }
-    function addToCart(id){
-      const cart = loadCart();
-      cart[id] = (cart[id]||0) + 1;
-      saveCart(cart);
+    function addToCart(id, size=null){
+  const cart = loadCart();
+  const key = size ? `${id}_${size}` : id; // ID combinado si tiene talle
+  cart[key] = (cart[key]||0) + 1;
+  saveCart(cart);
     }
+    
     function removeFromCart(id){
       const cart = loadCart();
       delete cart[id];
@@ -616,13 +644,14 @@
         cartItemsEl.innerHTML = '<div style="color:var(--muted)">El carrito está vacío.</div>';
       } else {
         entries.forEach(([id,qty])=>{
-          const prod = PRODUCTS.find(p=>p.id===id);
+          const [pid, size] = id.split('_');
+          const prod = PRODUCTS.find(p=>p.id===pid);
           if(!prod) return;
           const row = document.createElement('div'); row.className='cart-item';
           const img = document.createElement('img'); img.src = prod.images[0];
           const info = document.createElement('div'); info.style.flex='1';
-          const sizes = prod.sizes ? ' — Talles: ' + prod.sizes.join(', ') : '';
-          info.innerHTML = `<div style="font-weight:700">${prod.name}</div><div style="color:var(--muted)">x ${qty} — $${numberWithDots(prod.price)}${sizes}</div>`;
+          const sizeTxt = size ? ` — Talle: ${size}` : '';
+          info.innerHTML = `<div style="font-weight:700">${prod.name}</div><div style="color:var(--muted)">x ${qty} — $${numberWithDots(prod.price)}${sizeTxt}</div>`;
           const qtyCtrl = document.createElement('div'); qtyCtrl.style.display='flex'; qtyCtrl.style.flexDirection='column';
           const inc = document.createElement('button'); inc.textContent = '+'; inc.style.marginBottom='6px';
           const dec = document.createElement('button'); dec.textContent = '-';
@@ -671,15 +700,21 @@
 
     // construir mensaje para wa
     function buildOrderMessage(empName){
-      const cart = loadCart();
-      const productsList = Object.entries(cart).map(([id,qty])=>{
-        const p = PRODUCTS.find(x=>x.id===id);
-        const sizes = p.sizes ? ' — Talles: ' + p.sizes.join(', ') : '';
-        return `${qty} x ${p.name}${sizes} — $${numberWithDots(p.price)} (subtotal: $${numberWithDots(p.price*qty)})`;
-      }).join('%0A');
-      const total = Object.entries(cart).reduce((s,[id,qty])=>{
-        const p = PRODUCTS.find(x=>x.id===id); return s + p.price*qty;
-      },0);
+  const cart = loadCart();
+  const productsList = Object.entries(cart).map(([id,qty])=>{
+    const [pid, size] = id.split('_'); // separa ID y talle si lo hay
+    const p = PRODUCTS.find(x=>x.id===pid);
+    if (!p) return '';
+    const sizeTxt = size ? ` — Talle: ${size}` : ''; // muestra talle seleccionado
+    return `${qty} x ${p.name}${sizeTxt} — $${numberWithDots(p.price)} (subtotal: $${numberWithDots(p.price*qty)})`;
+  }).join('%0A');
+
+    const total = Object.entries(cart).reduce((s,[id,qty])=>{
+  const [pid] = id.split('_'); // separa id y talle
+  const p = PRODUCTS.find(x=>x.id===pid);
+  return s + (p ? p.price * qty : 0);
+},0);
+      
       const d = window._orderData || {};
       let msg = `*Nuevo pedido*%0A%0A*Productos:*%0A${productsList}%0A%0A*Total:* $${numberWithDots(total)}%0A%0A*Cliente:* ${encodeURIComponent(d.nombre||'')}%0A*Teléfono:* ${encodeURIComponent(d.telefono||'')}%0A*Dirección:* ${encodeURIComponent(d.direccion||'')}%0A*CP:* ${encodeURIComponent(d.cp||'')}%0A*Provincia:* ${encodeURIComponent(d.provincia||'')}%0A*Ciudad:* ${encodeURIComponent(d.ciudad||'')}%0A*Tipo domicilio:* ${encodeURIComponent(d.tipo||'')}%0A*Indicaciones:* ${encodeURIComponent(d.indicaciones||'')}%0A%0A*Vendedor:* ${empName}%0A%0A*Enviado desde:* AD - Distribución Confiable`;
       return msg;
