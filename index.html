@@ -676,13 +676,58 @@ if (p.sizes) {
     // helpers
     function numberWithDots(x){ return String(x).replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
 
+/**************************************
+ * Verificación de compra mínima (solo categorías restringidas)
+ **************************************/
+function cumpleCompraMinima() {
+  const cart = loadCart();
+  const entries = Object.entries(cart);
+  if (entries.length === 0) return false;
+
+  // Categorías sujetas a compra mínima
+  const CATS_MIN = ['AURICULARES', 'PARLANTES', 'CABLES Y CARGADORES', 'SMARTWATCH', 'PRODUCTOS VARIADOS'];
+
+  let totalRestrictas = 0;
+  let tieneRestrictas = false;
+
+  entries.forEach(([id, qty]) => {
+    const [pid] = id.split('_');
+    const p = PRODUCTS.find(x => x.id === pid);
+    if (!p) return;
+
+    // Si pertenece a las categorías restringidas, sumar
+    if (CATS_MIN.includes(p.category)) {
+      totalRestrictas += p.price * qty;
+      tieneRestrictas = true;
+    }
+  });
+
+  // Si no hay productos de esas categorías, no hay restricción
+  if (!tieneRestrictas) return true;
+
+  // Si hay productos restringidos y el total de esos productos es menor a 60.000, no cumple
+  if (totalRestrictas < 60000) return false;
+
+  return true;
+}
+    
     // form workflow
     openFormBtn.addEventListener('click', ()=>{
-      const cart = loadCart();
-      if(Object.keys(cart).length===0){ alert('El carrito está vacío. Agregá productos antes de rellenar el formulario.'); return; }
-      modalBack.style.display='flex';
-      whatsappBtns.style.display='none';
-      document.getElementById('whatsappBtns').style.display='none';
+  const cart = loadCart();
+  if(Object.keys(cart).length===0){ 
+    alert('El carrito está vacío. Agregá productos antes de rellenar el formulario.'); 
+    return; 
+  }
+
+  // 🚨 Verificar compra mínima solo en categorías específicas
+  if(!cumpleCompraMinima()){
+    alert('La compra mínima para productos de las categorías AURICULARES, PARLANTES, CABLES Y CARGADORES, SMARTWATCH o PRODUCTOS VARIADOS debe ser de $60.000 (solo se cuenta el total de esos productos).');
+    return;
+  }
+
+  modalBack.style.display='flex';
+  whatsappBtns.style.display='none';
+  document.getElementById('whatsappBtns').style.display='none';
     });
 
     closeModalBtn.addEventListener('click', ()=>{ modalBack.style.display='none'; });
