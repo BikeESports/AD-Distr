@@ -51,9 +51,11 @@
     input,select,textarea{width:100%;padding:10px;border-radius:8px;background:#0a0a0a;border:1px solid rgba(255,255,255,0.04);color:var(--text)}
     .whatsapp-row{display:flex;gap:8px;margin-top:10px}
     .whatsapp-row button{flex:1;padding:10px;border-radius:8px;border:none;cursor:pointer}
+    .whatsapp-a { background:#e53935; color:#fff; } /* rojo fuerte para Agustin */
     .whatsapp-e{background:#25D366;color:#fff} /* verde claro para Ezequiel */
     .whatsapp-l{background:#ffc107;color:#fff} /* amarillo para Lucas */
     .whatsapp-j { background:#0078ff; color:#fff; } /* azul intenso para Jesi */
+    
     /* responsive */
     @media(max-width:880px){main{flex-direction:column;padding:12px}.cart-panel{position:static;width:100%;max-height:300px}}
   </style>
@@ -155,9 +157,11 @@
       <div id="whatsappBtns" style="display:none;margin-top:12px">
         <div style="font-size:14px;color:var(--muted);margin-bottom:8px">Enviar pedido por WhatsApp a:</div>
         <div class="whatsapp-row">
+          <button id="waAgu" class="whatsapp-j">Agustin</button>
           <button id="waEze" class="whatsapp-e">Ezequiel</button>
           <button id="waLuc" class="whatsapp-l">Lucas</button>
           <button id="waJes" class="whatsapp-j">Jesi</button>
+          
         </div>
       </div>
     </div>
@@ -491,6 +495,7 @@
     ];
 
     // teléfonos WhatsApp
+    const WHA_AGU = '5492352441553'; // Agustin
     const WHA_EZE = '5491130489686'; // Ezequiel
     const WHA_LUC = '5491176123282'; // Lucas
     const WHA_JES = '5491160357535'; // Jesi
@@ -654,7 +659,7 @@
       // show whatsapp buttons with order preview
       whatsappBtns.style.display='block';
       document.getElementById('whatsappBtns').style.display='block';
-      alert('Datos confirmados. Elegí a quién enviar por WhatsApp (Ezequiel, Lucas o Jesi).');
+      alert('Datos confirmados. Elegí a quién enviar por WhatsApp (Agustin, Ezequiel, Lucas o Jesi).');
       // store form data temporarily
       const fd = new FormData(orderForm);
       window._orderData = Object.fromEntries(fd.entries());
@@ -677,6 +682,13 @@
     }
 
     // botones wa
+    
+    const waAguBtn = document.getElementById('waAgu');
+    waAguBtn.addEventListener('click', ()=>{
+      const msg = buildOrderMessage('Agustin');
+      const url = `https://wa.me/${WHA_AGU}?text=${msg}`;
+      window.open(url, '_blank');
+    });
     waEzeBtn.addEventListener('click', ()=>{
       const msg = buildOrderMessage('Ezequiel');
       const url = `https://wa.me/${WHA_EZE}?text=${msg}`;
@@ -692,6 +704,8 @@
       const msg = buildOrderMessage('Jesi');
       const url = `https://wa.me/${WHA_JES}?text=${msg}`;
       window.open(url, '_blank');
+
+  
     });
 
     // init
