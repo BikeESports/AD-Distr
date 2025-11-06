@@ -577,16 +577,31 @@
       renderProducts();
     });
 
-    function renderProducts(){
-      productsContainer.innerHTML='';
-      const list = activeCat ? PRODUCTS.filter(p=>p.category===activeCat) : PRODUCTS;
-      list.forEach(p=>{
-        const card = document.createElement('div'); card.className='card';
-        // gallery
-        const gallery = document.createElement('div'); gallery.className='gallery';
-        const img = document.createElement('img'); img.src = p.images[0];
-        gallery.appendChild(img);
-
+function renderProducts() {
+  productsContainer.innerHTML = '';
+  PRODUCTS.forEach(p => {
+    productsContainer.innerHTML += `
+      <div class="card">
+        <div class="gallery">
+          <img src="${p.images[0]}" alt="${p.name}">
+        </div>
+        <div class="product-name">${p.name}</div>
+        ${
+          p.includes
+            ? `<ul style="font-size:12px;color:#ccc;list-style:none;padding-left:0;margin-top:4px;">
+                ${p.includes.map(item => `<li>• ${item}</li>`).join('')}
+               </ul>`
+            : ''
+        }
+        <div class="price">$${numberWithDots(p.price)}</div>
+        <div class="actions">
+          <button class="add" onclick="addToCart('${p.id}')">Agregar al carrito</button>
+          <button class="view" onclick="viewProduct('${p.id}')">Ver</button>
+        </div>
+      </div>
+    `;
+  });
+}
         if(p.images.length>1){
           const left = document.createElement('div'); left.className='nav left'; left.textContent='‹';
           const right = document.createElement('div'); right.className='nav right'; right.textContent='›';
