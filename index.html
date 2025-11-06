@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AD — Distribución Confiable</title>
+  <link rel="icon" href="logo-ad-distribucion.jpg" />
+  <style>
+    :root{
+      --bg:#000;
+      --text:#fff;
+      --accent:#0b66ff; /* azul botones */
+      --card:#0d0d0d;
+      --muted:#cfcfcf;
+    }
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter, Arial, sans-serif}
+    header{display:flex;align-items:center;gap:16px;padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.03)}
+    .logo{display:flex;align-items:center;gap:12px}
+    .logo img{height:48px}
+    .site-title{font-size:20px;font-weight:700}
+    .slogan{font-size:13px;color:var(--muted)}
+    main{display:flex;gap:24px;padding:20px;max-width:1200px;margin:0 auto}
+    .left{flex:1}
+    .controls{display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+    .category-btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:8px;color:var(--text);cursor:pointer}
+    .category-btn.active{background:var(--accent);color:#fff}
+    .products{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+    .card{background:var(--card);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);display:flex;flex-direction:column;gap:8px}
+    .gallery{position:relative;overflow:hidden;border-radius:8px;height:200px;display:flex;align-items:center;justify-content:center;background:#070707}
+    .gallery img{max-width:100%;max-height:100%;object-fit:contain}
+    .gallery .nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.45);padding:6px;border-radius:6px;cursor:pointer}
+    .nav.left{left:8px} .nav.right{right:8px}
+    .product-name{font-weight:700}
+    .price{font-weight:800;color:var(--accent);font-size:18px}
+    .actions{display:flex;gap:8px;margin-top:auto;align-items:center}
+    button.add{background:var(--accent);border:none;padding:8px 12px;border-radius:8px;color:#fff;cursor:pointer}
+    button.view{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:8px;color:var(--text);cursor:pointer}
+    /* Cart */
+    .cart-btn{margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:8px;color:var(--text);cursor:pointer}
+    .cart-panel{position:fixed;right:20px;top:80px;width:360px;max-height:75vh;background:var(--card);border-radius:10px;padding:12px;overflow:auto;border:1px solid rgba(255,255,255,0.04)}
+    .cart-item{display:flex;gap:8px;align-items:center;border-bottom:1px solid rgba(255,255,255,0.02);padding:8px 0}
+    .cart-item img{width:60px;height:50px;object-fit:cover;border-radius:6px}
+    .cart-total{font-weight:800;text-align:right;margin-top:8px;color:var(--accent)}
+    .btn-primary{background:var(--accent);color:#fff;padding:10px;border-radius:8px;border:none;cursor:pointer;width:100%}
+    /* Modal (form) */
+    .modal-back{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:20px}
+    .modal{background:#0b0b0b;border-radius:10px;padding:18px;width:640px;max-width:100%;border:1px solid rgba(255,255,255,0.03)}
+    .form-row{display:flex;gap:8px}
+    .form-row .col{flex:1}
+    label{display:block;font-size:13px;margin-bottom:6px;color:var(--muted)}
+    input,select,textarea{width:100%;padding:10px;border-radius:8px;background:#0a0a0a;border:1px solid rgba(255,255,255,0.04);color:var(--text)}
+    .whatsapp-row{display:flex;gap:8px;margin-top:10px}
+    .whatsapp-row button{flex:1;padding:10px;border-radius:8px;border:none;cursor:pointer}
+    .whatsapp-a { background:#25D366; color:#fff; } /* rojo para Agustín */
+    @media(max-width:500px){
+  .whatsapp-row{flex-direction:column;}
+} /* ← cerrar esta llave antes de la siguiente media query */
+
+@media(max-width:880px){
+  main{flex-direction:column;padding:12px}
+  .cart-panel{position:static;width:100%;max-height:300px}
+} /* ← faltaba esta llave de cierre */
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <img src="logo-ad-distribucion.png" alt="AD logo">
+      <div>
+        <div class="site-title">AD</div>
+        <div class="slogan">Distribución Confiable</div>
+      </div>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <button class="cart-btn" id="openCartBtn">Carrito (<span id="cartCount">0</span>)</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="left">
+      <div class="controls">
+        <div>Filtrar por categoría:</div>
+        <div id="categories"></div>
+        <button class="category-btn" id="clearFilter">Mostrar todo</button>
+      </div>
+
+      <div class="products" id="products"></div>
+    </div>
+
+    <!-- cart panel -->
+    <div id="cartPanel" class="cart-panel" style="display:none">
+      <h3>Carrito</h3>
+      <div id="cartItems"></div>
+      <div class="cart-total">Total: $<span id="cartTotal">0</span></div>
+      <div style="margin-top:10px">
+        <button class="btn-primary" id="openFormBtn">Rellenar formulario</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal: form -->
+  <div id="modalBack" class="modal-back">
+    <div class="modal">
+      <h3>Formulario de envío</h3>
+<p style="font-size:13px;color:#bbb;margin-top:-4px;margin-bottom:10px;">⚠️ El precio de su pedido podría llegar a cambiar dependiendo de la zona en la que se encuentre el cliente.</p>
+      <form id="orderForm">
+        <div class="form-row">
+          <div class="col">
+            <label>Nombre y apellido</label>
+            <input required name="nombre" />
+          </div>
+          <div class="col">
+            <label>Teléfono</label>
+            <input required name="telefono" />
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:8px">
+          <div class="col">
+            <label>Dirección o lugar de entrega</label>
+            <input required name="direccion" />
+          </div>
+          <div class="col">
+            <label>Código Postal</label>
+            <input required name="cp" />
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:8px">
+          <div class="col">
+            <label>Provincia</label>
+            <input required name="provincia" />
+          </div>
+          <div class="col">
+            <label>Ciudad</label>
+            <input required name="ciudad" />
+          </div>
+        </div>
+
+        <div style="margin-top:8px">
+          <label>Indicaciones para la entrega (opcional)</label>
+          <textarea name="indicaciones" rows="2"></textarea>
+        </div>
+
+        <div style="margin-top:8px">
+          <label>Tipo de domicilio</label>
+          <div style="display:flex;gap:12px;margin-top:6px">
+            <label><input type="radio" name="tipo" value="Residencial" checked /> Residencial</label>
+            <label><input type="radio" name="tipo" value="Laboral" /> Laboral</label>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button type="submit" class="btn-primary">Confirmar datos</button>
+          <button type="button" id="closeModal" style="background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text);padding:10px;border-radius:8px">Cancelar</button>
+        </div>
+      </form>
+
+      <!-- WhatsApp buttons appear after confirm -->
+      <div id="whatsappBtns" style="display:none;margin-top:12px">
+        <div style="font-size:14px;color:var(--muted);margin-bottom:8px">Enviar pedido por WhatsApp a:</div>
+        <div class="whatsapp-row">
+  <button id="waAgu" class="whatsapp-a">Agustín</button>
+       </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**************************************
+     * Datos de productos
+     **************************************/
+    const PRODUCTS = [
+      /* AURICULARES */
+      {id:'aur1', category:'AURICULARES', name:'AURICULAR INALAMBRICO E6S', price:16000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/e6s-df2f72d0a449b503d917594143142980-480-0.webp']},
+      {id:'aur2', category:'AURICULARES', name:'AURICULAR MOD89 – ST', price:20000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/16661918244b576ecfa22715ad290d0d37b749dd25-916ebcee2ff6149f9e17564084995704-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/1666191830580f31bca1bb26ec6865b696f44e0129-2ebd29ff834aa4a3ca17564084994026-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/1666191847f91588faa9b1b11bd79a093e6c988cbe-18846a0951d393756917564084995584-1024-1024.webp']},
+      {id:'aur3', category:'AURICULARES', name:'AURICULAR BLUETOOTH INALÁMBRICO (M20 PRO)', price:26000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/m20proauric-3377716d417753eedb17561503679201-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/alien-photoroom-png-photoroom-15b778a4cf04e9e27517428210229024-1024-1024-1f228898cc5657889517561503684439-1024-1024.webp']},
+      {id:'aur4', category:'AURICULARES', name:'AURICULAR BLUETOOTH INALÁMBRICO (M100)', price:16000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/m100auri-d3284240a8bba1031d17561500768252-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/6-3-8c3e59ace8b2dd5c7717561500767550-1024-1024.webp']},
+      {id:'aur5', category:'AURICULARES', name:'AURICULAR BLUETOOTH INALÁMBRICO (M66 PRO)', price:18000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/m66pro1-e42a23fff27b552ed217561502867406-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/m66pro3-b6b92e4d72f2df616e17561502659642-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/m66pro2-5a74775d71bfa77c1b17561502659224-1024-1024.webp']},
+      {id:'aur6', category:'AURICULARES', name:'AURICULAR BLUETOOTH INALÁMBRICO (M19-PRO)', price:16000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/m19proauri-93f325d5fb95ee30fc17561504806051-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/m19proauri1-6c87aa9f4973ac0aa517561504805845-1024-1024.webp']},
+      {id:'aur7', category:'AURICULARES', name:'AURICULAR MANOS LIBRES EMOCION (MOD 001)', price:6000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/1723932361620221b8b79e5e3edd60859edac83a16-91292c41e57a3763f317564071516967-480-0.webp']},
+      {id:'aur8', category:'AURICULARES', name:'AURICULARES INALAMBRICOS 165', price:18000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/img_20250121_151204993-244c9813902af28dab17374849217338-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/i65-16c4f18f2614c2e49e17369482857130-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/i65-1-5f3c067435f80f245017369482854863-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/i65-4-3fbe40a2c26e21274217369482856510-1024-1024.webp']},
+
+      /* PARLANTES */
+      {id:'par1', category:'PARLANTES', name:'MINI PARLANTE PORTATIL GO3 (AT-2108)', price:35000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/at-2108-cae20051a040ec2e8517607099830274-640-0.webp']},
+      {id:'par2', category:'PARLANTES', name:'PARLANTE T5', price:16000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/1653052996ad1e9b9be400e37ee3b1dadaa5ba7961-1cabd727499d386fe917508746712426-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/speaker-bt-colors-t3_10809_t3_4-9f4b5de64efdb3621d17508746715824-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/1653053388d3219a26dc8b6545a2cb92531e51c950-c507aa951c6fd911b317508746714571-1024-1024.webp']},
+      {id:'par3', category:'PARLANTES', name:'PARLANTE BLUETOOTH 3\" LED ( MOD 908)', price:22000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/1747941065c185015917b186fb2e27f924fc5ac97e-aa8336f29cbb11691e17508751171070-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/710ee21d05173398b660432510aabe3555176394a57e9d621d4a741f2c129831173743-db8fd9ad3a658a9cbc17508751089280-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/6df28cd9b3a5643b491c3815d6ca24d126c5881e30c08c81a8e0270e62073e38173743-0a2ad5d5ee77f012e617508751088900-1024-1024.webp']},
+      {id:'par4', category:'PARLANTES', name:'PARLANTE BLUETOOTH 4\" (MOD X3)', price:22000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/4-a1b22cf3631a68cea817575922714318-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/whatsapp-image-2025-08-28-at-14-13-44-3-a36efe49aae232fce317564035823087-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/whatsapp-image-2025-08-28-at-14-13-41-5-76186a1e204e38bf6317564035823417-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/3202-a4cb117409868b1c3e17508748931356-1024-1024.webp']},
+
+      /* CABLES Y CARGADORES */
+      {id:'cab1', category:'CABLES Y CARGADORES', name:'CABLE USB IPHONE 5A 1M', price:5000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/1-728c812e2c4be3e30a17585640967621-1024-1024.png']},
+      {id:'cab2', category:'CABLES Y CARGADORES', name:'CARGADOR DE AUTO USB + C', price:8000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/ac02-92df4f64ccd0e02b6c17606410655974-640-0.webp']},
+      {id:'cab3', category:'CABLES Y CARGADORES', name:'CARGADOR IBEK 2.6A - V8', price:8000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/ib-2601-8b27dbcb5b7e523e7917607045697576-480-0.webp']},
+      {id:'cab4', category:'CABLES Y CARGADORES', name:'CARGADOR 3.1A V8 - 2 USB IBEK', price:10000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/17-eb268debe1e58b6c8b17607071333512-1024-1024.webp']},
+      {id:'cab5', category:'CABLES Y CARGADORES', name:'CABLE USB IPHONE 1 METRO', price:8000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/sp0392-8dcd4f53dce423ad2017606407563170-640-0.webp']},
+      {id:'cab6', category:'CABLES Y CARGADORES', name:'CARGADOR RAPIDO IBEK 5.8A - IPHONE', price:16000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/ib-5807-7607ad783afd01d6d617606427730742-480-0.webp']},
+      {id:'cab7', category:'CABLES Y CARGADORES', name:'CARGADOR MAGNETICO 3 EN 1', price:40000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/acc0024-8304bb9a3b8fece61417594932381323-480-0.webp']},
+      {id:'cab8', category:'CABLES Y CARGADORES', name:'CARGADOR PORTÁTIL 20000MAH CARGA RÁPIDA 4 EN 1 CON LINTERNA', price:40000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/diseno-sin-titulo-a4c1d039b0716e4c7a17583013865561-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/13903694-d78a-46ff-9c12-ce2ca525187c-7839720a1dfb3a875817583013860562-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/f84af292-6f23-4cfb-92b6-6f9a842b063b-4d4cae27aefaf44f7217583013862014-1024-1024.webp']},
+      {id:'cab9', category:'CABLES Y CARGADORES', name:'ADAPTADOR USB 20W TIPO C', price:40000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/20w-tyc-3e4e528b25b03c86ff17580481042749-640-0.webp']},
+      {id:'cab10', category:'CABLES Y CARGADORES', name:'CARGADOR PORTATIL 10.000 MAH IBEK', price:25000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/17166781754e3068ced2175a4a74300a2152604b5d-webp-540a74adcb17eee20217521570011169-1024-1024.jpg','https://acdn-us.mitiendanube.com/stores/004/109/063/products/17166781855f0faacf880f2201b2d39d9903dc5d00-webp-a7749f7fde9a4a945e17521570024205-1024-1024.jpg']},
+      {id:'cab11', category:'CABLES Y CARGADORES', name:'CARGADOR 220V MODO-018 4.8A - RUSH - 1USB + CABLE TIPO v8', price:10000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/1740056726d6e0ac407dffaa03450d8682778e4992-c57f1657c5dea47fe117543084565358-1024-1024.webp']},
+      {id:'cab12', category:'CABLES Y CARGADORES', name:'CARGADOR 220V MODO-018 4.8A - RUSH - 1USB + CABLE TIPO v8 (2)', price:10000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/3-48630b466f5611730017373945545822-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/4-36572fbd185e53608b17170795982284-1024-1024.webp']},
+
+      /* SMARTWATCHS */
+      {id:'sw1', category:'SMARTWATCHS', name:'SMARTWATCH I7 BRACELET', price:25000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/blanc-007-e0375080bd688a596917442875916983-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/blanc-022-1f9f3e408ff01a6d8217442875918863-480-0.webp']},
+      {id:'sw2', category:'SMARTWATCHS', name:'SMARTWATCH I8 PRO MAX', price:28000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/d_nq_np_804260-mla80375985181_112024-o-a837831682757f79dd17345488328780-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/45-74f821221b534e013417374010286000-1024-1024.webp']},
+      {id:'sw3', category:'SMARTWATCHS', name:'SMARTWATCH T20 ULTRA', price:45000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/24098-1-84c786b605f188d79f17241818779582-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/smartwatch-t20-ultra-e0165ce2f5be3c6ce517401644592057-1024-1024.webp']},
+      {id:'sw4', category:'SMARTWATCHS', name:'SMARTWATCH T500 ULTIMATE', price:45000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/1000-1-71632d4213d2b62ea017544190555692-1024-1024.webp','https://acdn-us.mitiendanube.com/stores/004/109/063/products/1000-d8d5d3ca4e5f17fe6e17544190555575-1024-1024.webp']},
+      {id:'sw5', category:'SMARTWATCHS', name:'SMARTWATCH INTELIGENTE CON 7 MALLAS + AURICULAR', price:60000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/zt11smart-9f4969152a01bddfa417544039156176-1024-1024.webp']},
+
+      /* VARIADOS */
+      {id:'var1', category:'PRODUCTOS VARIADOS', name:'MAQUINA DE COSER - (S0124)', price:50000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/copia-de-diseno-sin-titulo-3-8b9f684a5e13d68abb17594998501133-1024-1024.webp']},
+      {id:'var2', category:'PRODUCTOS VARIADOS', name:'SMART TV BOX ULTRA HD 8K', price:60000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/d5b5120c-9957-4d27-9814-9c2da6d50557-684cae7a20dc19a4a017610693180264-1024-1024.png']},
+      {id:'var3', category:'PRODUCTOS VARIADOS', name:'RELOJ DESPERTADOR HORIZONTAL DIGITAL', price:16000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/b212ch3-e3b076450833824f8517594133711234-480-0.webp']},
+      {id:'var4', category:'PRODUCTOS VARIADOS', name:'TECLADO CON CABLE (MOD FV-500)', price:16000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/16451981364200e1940b50056b9d3db9afa11460d3-1-jpg-4047c4f49dfe24b3fd17551959434824-1024-1024.webp']},
+      {id:'var5', category:'PRODUCTOS VARIADOS', name:'MINI PROYECTOR (YG600)', price:85000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/1-1-9ab469cb82ab98712c17425016960899-1024-1024.webp']},
+      {id:'var6', category:'PRODUCTOS VARIADOS', name:'PENDRIVE 64GB', price:25000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/17467111269c91bbd1f18dad4170e9721314fd6155-1d4e3274aca092e00b17551958151638-1024-1024.webp']},
+      {id:'var7', category:'PRODUCTOS VARIADOS', name:'PALO SELFIE CON CABLE', price:16000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/sel01-7f97f62da78989274917580517411620-1024-1024.webp']},
+      {id:'var8', category:'PRODUCTOS VARIADOS', name:'RACK ZAPATOS PLEGABLE X4', price:30000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/cb-506-1918bcb715ac1c7ecc17594298215227-640-0.webp']},
+      {id:'var9', category:'PRODUCTOS VARIADOS', name:'FLOR DE DUCHA RGB', price:40000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/copia-de-diseno-sin-titulo-6-10e66dda94cab93b7f17594338968336-1024-1024.webp']},
+      {id:'var10', category:'PRODUCTOS VARIADOS', name:'WAFFLERA ANTIADHERENTE ORYX (SIB07)', price:70000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/diseno-sin-titulo-1-7184068649cec9185517607302197581-1024-1024.webp']},
+      {id:'var11', category:'PRODUCTOS VARIADOS', name:'SANDWICHERA ANTIADHERENTE', price:60000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/6383-968608f60b1a70caf917580347726552-480-0.webp']},
+      {id:'var12', category:'PRODUCTOS VARIADOS', name:'PAVA ELECTRICA HERVIDORA 2L ACERO INOXIDABLE', price:40000, images:['https://acdn-us.mitiendanube.com/stores/004/109/063/products/copia-de-diseno-sin-titulo-8-574bb0182e1af1471517606380005327-1024-1024.webp']},
+
+      /* ELECTRODOMÉSTICOS */
+      {id:'elec1', category:'ELECTRODOMÉSTICOS', name:'Freidora De Aire Philco Fr245ph 1450w 5L 8 Programas', price:150000, images:[
+        'https://http2.mlstatic.com/D_NQ_NP_2X_983641-MLA95689039102_102025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_789909-MLA81704503614_012025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_910272-MLA81704513856_012025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_842818-MLA94680228770_102025-F.webp'
+      ]},
+      {id:'elec2', category:'ELECTRODOMÉSTICOS', name:'Freidora De Aire Philco Fr245ph 1450w 5L 8 Programas (Variante)', price:150000, images:[
+        'https://http2.mlstatic.com/D_NQ_NP_2X_956284-MLA95658944212_102025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_772105-MLA82915767706_032025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_834180-MLA82915767718_032025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_973529-MLA82915767722_032025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_644432-MLA82915682570_032025-F.webp'
+      ]},
+      {id:'elec3', category:'ELECTRODOMÉSTICOS', name:'Freidora De Aire Sansei 1350w 3.5L Negra', price:130000, images:[
+        'https://http2.mlstatic.com/D_NQ_NP_2X_638508-MLA94802562108_102025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_808637-MLA94552789925_102025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_810782-MLA94552651297_102025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_784838-MLA83048376880_032025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_718432-MLA92188907888_092025-F.webp'
+      ]},
+      {id:'elec4', category:'ELECTRODOMÉSTICOS', name:'Freidora De Aire Proline 1350W 3.5L Negra', price:130000, images:[
+        'https://http2.mlstatic.com/D_NQ_NP_2X_898467-MLA95958524265_102025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_756883-MLA81977523551_012025-F.webp'
+      ]},
+      {id:'elec5', category:'ELECTRODOMÉSTICOS', name:'Freidora De Aire Aiwa Cook 3.6L 1400W Timer Negro', price:130000, images:[
+        'https://http2.mlstatic.com/D_NQ_NP_2X_772457-MLA96124716837_102025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_910099-MLU76315525815_052024-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_960670-MLU76315223327_052024-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_903785-MLU76129804448_052024-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_972535-MLU76571201742_062024-F.webp'
+      ]},
+      {id:'elec6', category:'ELECTRODOMÉSTICOS', name:'Freidora De Aire Digital Suono Con Ventana 6.2L 1800W', price:130000, images:[
+        'https://http2.mlstatic.com/D_NQ_NP_2X_997364-MLA95695048970_102025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_759598-MLA84159409945_042025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_833351-MLA84159381027_042025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_932859-MLA84159400807_042025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_661591-MLA84159390581_042025-F.webp'
+      ]},
+      {id:'elec7', category:'ELECTRODOMÉSTICOS', name:'Freidora De Aire Gadnic CUK 8067 6.5L 1400W Negra', price:140000, images:[
+        'https://http2.mlstatic.com/D_NQ_NP_2X_627978-MLA93486336680_102025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_830957-MLA93906346713_102025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_949077-MLA93906346701_102025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_612097-MLA93906346703_102025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_826541-MLA93906346707_102025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_845255-MLA93906346711_102025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_604005-MLA93906346705_102025-F.webp'
+      ]},
+      {id:'elec8', category:'ELECTRODOMÉSTICOS', name:'Freidora De Aire Philco 6L Digital Con Visor 1700W', price:160000, images:[
+        'https://http2.mlstatic.com/D_NQ_NP_2X_753932-MLA95664380424_102025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_635320-MLA87450641384_072025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_737683-MLA87780909119_072025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_709865-MLA95112876449_102025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_819604-MLA84687514576_052025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_668013-MLA84687621424_052025-F.webp',
+        'https://http2.mlstatic.com/D_NQ_NP_2X_849597-MLA84687583094_052025-F.webp'
+      ]},
+
+      /* EN OFERTA */
+{id:'oferta1', category:'EN OFERTA', name:'Vaso Térmico Thirst Acero Inox Tapa Hermética', price:50000, images:['https://http2.mlstatic.com/D_NQ_NP_2X_630990-MLA96957390947_112025-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_797230-MLA96504863278_112025-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_938937-MLA96504903744_112025-F.webp']},
+{id:'oferta2', category:'EN OFERTA', name:'Packs X5 Remeras Manga Corta Algodón De Hombre', price:45000, images:['https://http2.mlstatic.com/D_NQ_NP_2X_970447-MLA50896690811_072022-F.webp']},
+{id:'oferta3', category:'EN OFERTA', name:'Perfume Lattafa Asad 100ml Spray Para Hombre', price:65000, images:['https://http2.mlstatic.com/D_NQ_NP_2X_933738-MLA83932944821_042025-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_704992-MLA83637592590_042025-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_661660-MLA83639335858_042025-F.webp']},
+{id:'oferta4', category:'EN OFERTA', name:'Perfume Lattafa Yara Moi Eau 100ml Spray Para Mujer', price:65000, images:['https://http2.mlstatic.com/D_NQ_NP_2X_892792-MLU74305603678_022024-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_640261-MLU75151471585_032024-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_925728-MLU75151745471_032024-F.webp']},
+{id:'oferta5', category:'EN OFERTA', name:'Perfume Lattafa Yara Candy Edp 100ml Spray Para Mujer', price:65000, images:['https://http2.mlstatic.com/D_NQ_NP_2X_908594-MLU78470053928_082024-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_929559-MLA80591868886_112024-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_889832-MLA80854516099_112024-F.webp']},
+{id:'oferta6', category:'EN OFERTA', name:'Perfume Kaiak Océano Masculino Edt 100ml', price:45000, images:['https://http2.mlstatic.com/D_NQ_NP_2X_708831-MLA84540916722_052025-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_836816-MLA84540926766_052025-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_988661-MLA84540926780_052025-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_850814-MLA84839175917_052025-F.webp']},
+{id:'oferta7', category:'EN OFERTA', name:'Perfume Armaf Odyssey Mandarin Sky Limited Edition Edp 100ml Para Hombre', price:66000, images:['https://http2.mlstatic.com/D_NQ_NP_2X_806818-MLM73982503686_012024-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_647085-MLA81021493583_112024-F.webp']},
+{id:'oferta8', category:'EN OFERTA', name:'Ramo De Maquillaje Tejar Make Up Completo', price:48000, images:['https://http2.mlstatic.com/D_NQ_NP_2X_866304-MLA78302211162_082024-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_971278-MLA78532279889_082024-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_666975-MLA78532329441_082024-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_800976-MLA78302417698_082024-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_705918-MLA78302388992_082024-F.webp']},
+{id:'oferta9', category:'EN OFERTA', name:'Kit Elvive Dream Liso: Shampoo, Acondicionador, CPP y Serum', price:45000, images:['https://http2.mlstatic.com/D_NQ_NP_2X_676170-MLA95682472096_102025-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_741587-MLA90101544379_082025-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_880016-MLA89726365706_082025-F.webp']},
+{id:'oferta10', category:'EN OFERTA', name:'Super Kit Rutina Humor', price:60000, images:['https://http2.mlstatic.com/D_NQ_NP_2X_643006-MLA96387195241_102025-F.webp']},
+{id:'oferta11', category:'EN OFERTA', name:'Apple iPhone 13 (128 GB) - Medianoche', price:1350000, images:['https://http2.mlstatic.com/D_NQ_NP_2X_797796-MLA96123654705_102025-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_834290-MLA74781175605_022024-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_834290-MLA74781175605_022024-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_726539-MLA47781378921_102021-F.webp', 'https://http2.mlstatic.com/D_NQ_NP_2X_778289-MLA47781591388_102021-F.webp']},
+
+/* CALZADOS (con talles) */
+      {id:'cal1', category:'CALZADOS', name:'Jordan 4 Retro Beige', price:110000, sizes:[39,41,42,43,44], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/2719296396b8da8aba4da0d14302acbd07cc168ca7811bd31f4594419a82fdc3224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/0f11ba9e3ae0353ae5bfd0654921df7b8c92fb7effc87d0811863e4d4f43fc62224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/f5adc07cf72b0a6235a311b327bcf420e6df6abe3331d689e616c85a64bcd8fc224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/dce202a638cdfc05696b94aecdbc745b08648cb60980400aca2ff6e6d82b1fd5224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/3619cd7ac1a48584797d580fd13885b2d5b0559acecaffe1b9b1d9944e7d5160224258.jpg'
+      ]},
+      {id:'cal2', category:'CALZADOS', name:'Jordan 4 Retro Bred', price:110000, sizes:[39,40,41,42,43,44], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/38401e77a65a0ec62296d5d5d6b1039352e3e42239b123fc0f88ea152b6f1890224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/728426a160072910e81efb018afccae87400521cea9deb9ff6193eeada67ea5d224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/ba118a00b84e7fbda993eb1e93c23812134278cc1dfb70f302f746aae90cd0a3224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/c98b5abcb64c124f632caee9091924a4106f0047aa8d812289557a7aa87c71f1224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/ef3181a2148a486e78335210fb94ed701483e0ad259d67e58cfd3cee25f83483224258.jpg'
+      ]},
+      {id:'cal3', category:'CALZADOS', name:'Vans Upland Black', price:110000, sizes:[39,40,41,42,43,44], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/0fed617c3c52d645849c227fb70026bce8c50f254a823e4190f1821d6400d39d224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/4effa5452d66593fbbf0238d518f46518b5c0e1d8defbb996866ec421dff0cc3224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/2c19af11e63baa034ab84fade2efb447c834d5d8604a5982f0dd325fd72b13cb224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/de71a176a87fa77e24673b838e0811808784cbef18d812701af92834600ed8d9224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/727c1f51ceea3de95528816c49411914372411e8fb516de7f17333f14c3002f3224258.jpg'
+      ]},
+      {id:'cal4', category:'CALZADOS', name:'Gazelle Black White', price:110000, sizes:[35,36,37,38,39], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/36ab70582ed684363dae1bedf3bef77b0648baddf07239101a5286f0f5870183224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/72967124da7e142025ae0656f9c730c63e7d718ab46a89b853afc77cd31b450c224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/134f34b98d2c83fb3a12a8fa87f4ec2c341ebdb17f107fe663f762410288660a224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/94265bb67cc306c06efe0a22e13fcaba515cef26d66b76bbefa5cbb48845fd27224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/92d5820295dc070b61f65d383c3179c49763f6eba83c191f9a175f667f0f4817224258.jpg'
+      ]},
+      {id:'cal5', category:'CALZADOS', name:'New Balance 9060 Black White', price:110000, sizes:[35,36,37,38,39,40,41,42,43,44], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/3f8deacecbad6a54658ab9a7797752f50da1354736a8ad0c0d7ccdb54aff8989224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/8a625b1f6168820673c7aeae68569dcda78aa99b5bb5851131ad15f9d12f3283224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/a5a12e81b8c6bbcb53f33b64e962928d2cdfd7f0167bc952625315deed360eda224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/7c17ede6f09cd8b72ffa7de689cd2b928d766457f69f52845b563ce5c01f2b51224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/a8225ad130518041679a16f3302abcba24fe453fab7c6482658f3cf71f762da5224258.jpg'
+      ]},
+      {id:'cal6', category:'CALZADOS', name:'Converse Black', price:110000, sizes:[35,36,37,38,39,40], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/446c0d5e280c028937685c6fa13639d8a9ed37338301f09c1563a2603bf4a59f224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/4b83b611e0454281007c002b55278c1f0a38bb7d21aeac86202054e2a736882a224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/8b1ecbd95f1b5346a303d985240dcf02ed3f84e40bcaf1df1f2b842f30a8655d224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/0a3d6e7d07ab7bab294ce460bb4af37bda99299cc8e183b3b5c4973c96a537b1224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/f476de0afb59c6b27dd7d351f08840c583c63e3b17d587cc98082347482c2965224258.jpg'
+      ]},
+      {id:'cal7', category:'CALZADOS', name:'Vans Knu Skool Blue', price:110000, sizes:[35,36,37,38,39,40,41,42,43,44], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/767b8714db3dbbf246937175c0e990296e077447aa12b4d36163f4964008391e224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/605042a1813b48b90d45f3804a8e990ba3bd1398f15c1eba0d0ccf6abc17c841224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/2690c882c1cee5824b683159390755feb27d903061aa31bf06edfa19a081420f224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/7c155657849e92fb16e28192dfdc14d7f3bab97f995776ffd5153e9b3f28e0b6224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/11089c9816a0405bc571430d5e1d19811ce47121e45c54b054defc91f5210b3c224258.jpg'
+      ]},
+      {id:'cal8', category:'CALZADOS', name:'Puma 180 Black', price:120000, sizes:[40,41,42,44], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/a9f03ecd56365e161f7bbb1dd8f11486895b60374bd0b1911034db9b4380108c224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/a101251709178037d21f5f3d565a34fdc35bb3dc4b1efe6e50c54c5040d860b4224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/9e2acba10644f660fc1c5ac78fa03567a95d9c77ea67b7fc56582b5b3a966541224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/1e19baba97fe2a7f32cc364b59c607a02f3be51010887e57534751990f92cdc5224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/ffb1ec4dc2e574bc6308fa24121adeaeeee46957590715d87ef3f7d2485a1714224258.jpg'
+      ]},
+      {id:'cal9', category:'CALZADOS', name:'New Balance 1906R', price:110000, sizes:[39,40,42,44], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/77735174711844696ce9e38f46766c7fd7850890e0936071e839dfff91c0faab224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/c3918295c17bf524dcc57a03c6b5ff52ade3ce642a0dcf7d7b0a74987738ab9e224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/db4402d0f321c557eaff455dc0bee10448ce7ef65bd1d4fb6b07a4e326c9b242224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/2c1f69ef399dd6e1841e70bc0a9c4e93ebec88320acf83f0628f556c039b5422224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/1b15406a609a2d486d4f83a95f0159c8dc6348984df486446c9b1e582ef9be53224258.jpg'
+      ]},
+      {id:'cal10', category:'CALZADOS', name:'Campus 00s Korn', price:110000, sizes:[35,36,37,38,39,40,41,42,43], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/3d26a73c430bcddf75c661d90b021eb285d607877ab42535003bfae1cc51157a224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/905e068e3b50d3e6e42201c4a98791c722e69f9d9934a5178faf1ea19f49529c224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/71f1ee3dbdbc5263c95ec06531de5bd0e34f5df87da3758129f80dca7624f83a224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/ba93c0bc8fbdec136aa6023b64189101d56e52d865c32f8387e06e19dd3fe21c224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/37ad5df1a19da2b86bf8da1de981246205c9e6e4caf85a636e7ad02eba4e0166224258.jpg'
+      ]},
+      {id:'cal11', category:'CALZADOS', name:'Dunk Teddy Bear', price:110000, sizes:[35,36,38,39,40], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/bc90016552857e36a254b3879f769fe6c9f32fbb44aed6dbf237f518d0010a20224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/b36a5e14a8b3ab14e987a198dfd2366bb275d5cab877651a70fff405bd4a3060224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/b3afb62a24edda09655627c4e7f835fd179827f1da81b5d02e7d899e6d8acd34224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/dac063b009dc0f7fb18dc9c17843532bf19611a8868582391e4bafe7fd7d3fd2224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/a87b53af7f739cda96c68ef951dd93b6df1e0dd75a68019a32a4ec9abb6eb7a1224258.jpg'
+      ]},
+      {id:'cal12', category:'CALZADOS', name:'Dunk Panda', price:110000, sizes:[35,36,37,38,39,40,43], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/9e21e1d06065f256bd5f6a375eef5a292d0f9bb6a949c26da071847c8393e9d1224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/abd9e8de0a6f83be288996d2d8977e22917c20dfd315339fa3899b5f942535a2224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/c6af236e1bcc810464015502a266c1eb6ec18a828b063d293bbbb8c6213954ac224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/9b3fe3ab8dbba741efa5f166119aa0520153604a077083bc7ec41bf9f1f156dc224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/af876d00221e7c4678fc62a078838551eec12be51d6da8de5ce5b2627691d452224258.jpg'
+      ]},
+      {id:'cal13', category:'CALZADOS', name:'Air Force 1 Triple White', price:110000, sizes:[35,36,37,38,39,40,41,42,43,44], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/da1abf5a67384b6d2bed2a96c1f079476af44afccac03d4728e81f1e34256470224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/c7cbe8d6a2716f5cb01ec3f0870b20100a0078d806d4443b5b68c41199d7bfde224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/0ec640088c72feedb684e9fe355acf8dc5abfe495a41b6c500578cb2944c9d19224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/ddb80e9ad9aca3dbeeed30f84aef7c366980f3283a0d36c8cce06816a5c81352224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/e6b0d52bdef9691e2bb3385acff9f9be84307af930477999ed5d689197522e5e224258.jpg'
+      ]},
+      {id:'cal14', category:'CALZADOS', name:'Campus 00s Blue', price:110000, sizes:[39,40,43], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/396437d9a87a6d0eb4a991db1508f14db9e69e917109c4c2f90ee28a39960690224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/1f3d13a72d466921e5d9e915d787d23d492e47c5bb9e4104517047db9f79d50e224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/4a4fa7a9313df978e5513278a01d06a04c0e0e8a8ce115fccd714a94bd8e22a8224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/5d4fd13c60dc3a8578ddd067e9b12793a397a09951c00229566b4d5a8ef99743224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/42b543b462ae222b48fd003b8df9c881782b6a1e2382c58db8fbc5443984bb8a224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/e3cf7eb6c7790607fa61e925501d4667c29a4653d2f2f03795c8e1b88bb9a99a224258.jpg'
+      ]},
+      {id:'cal15', category:'CALZADOS', name:'Puma 180 Grey', price:120000, sizes:[41,42,43,44], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/40daf894ffc1de2ab17602da2ebcf2e1fcc4a034d46a09ae470901e13dd7c332224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/fa3429719ba1fdf66e7c2d5992a654e4ffd919370a1b6ff15ef86d53a2464166224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/0030b36521f80464e2e00e06a9d3f2d5fd9e3a8aa384453240575fa86cfcf834224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/f7f7ce04cab61dce1384d22bd6452cba2f8d6b2be11d09dc4979ccb05a76adaf224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/211cf3baae13425ebc4be23e847230a3e4c285a3251922f95eb030e6a8e6751d224258.jpg'
+      ]},
+      {id:'cal16', category:'CALZADOS', name:'Louis Vuitton Skate', price:120000, sizes:[41], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/b138d8de231be1ab0f3df59713979219f993dae2957feff7b5dd8e5efc61465f224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/853b7f2d89c7d36a4410606c8e34658742a4ab1af5f8314c164ce49d04a848ba224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/d55e7b04359024e8186f1bbe0a474654f1adb23ec4d0deb1f64a01906819f46f224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/3565948de2ea542baaa31176a070ebbcc0d5d1386d519a2be1d277056e082ea8224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/e4ef7d669bf062d42b942311d0ed6c23bc379f95c36a73c268491be0da379154224258.jpg'
+      ]},
+      {id:'cal17', category:'CALZADOS', name:'Puma La France Beige', price:160000, sizes:[41,42,43], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/f1eeaf3745b3ec0343af2f4e9c60cf8985c11ab52fed6fc9e3dffc33d397fd4d224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/88a8913d99b8461149a3241dc7d90cdc8d2057c340e1bae7fca403bbe1abe35e224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/e5f5f470a4b11387f54e15f3f8c01e05b164b359b9a780cdfe1b79e34b9a81f4224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/2dbf213f77e86e592813f37c4875f6549acb51a4c5da1e09198cdbd5b11b0ca3224258.jpg'
+      ]},
+      {id:'cal18', category:'CALZADOS', name:'Puma 180 Beige', price:120000, sizes:[41,44], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/c9c9d59f1307428785b148a92eeaaae117d66a94d96543e961ca34497905ae9e224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/792afb1bc8662ceef8586cc84c3ab503757691f88324f3f9e90c1efebe1179ed224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/fb1581591d22740b2fdf2b7f80bec044660b1ed553428522ce059435a80c846d224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/a1e7908c5492b3eb9309d40d25af05eb4b0a36d0a4cf62a7293b8cfc22e22664224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/025253861c2d727383d732d920f371fad7cfe2e7a3fd2bd6f7779a0f0a27d10f224258.jpg'
+      ]},
+      {id:'cal19', category:'CALZADOS', name:'DC Court Graffik Black', price:110000, sizes:[41,42,43], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/1679020e67bd89f2ef5bad181cc77c0c9ec9924dc5ca31f6db2cb00467a76f6f224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/86810c469c5b68f5906110e4126620c8ac2ac0b57bf4508c07129133ec6fd8e9224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/6a68311e67fa8fa48daf20836a42f7b6b96ac15dc623c223bbef3f0adfc6b289224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/8d32590137e07f36e5afa89acf9371a06802d0d11b0f14f6800bfa8867f80c30224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/fced3a2a0d67619a498efa9a2f2ce3915eef5d0545e074780b37578880585d19224258.jpg'
+      ]},
+      {id:'cal20', category:'CALZADOS', name:'Vans Hylane Black', price:110000, sizes:[42], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/e362593fd2cf805887f86d465b3045d7c8580e937ca512747a87c7b949888f7d224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/37336312045c7acda207ba41ceb52bffb0a4fb280f9f06704406dc582aebb3fe224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/a71a2bfe2cd3907fa756730cde43afe8ec0d3ef3b32ee296aa0a6aee31cb9128224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/3a3fa4fe7e2eb24140564c9618074305ba7e8ed03293c41e6e7f9191ac7541b1224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/1783f6000286ce9d678e0547404fb76aab578a7ce314832195b9c9b2afc6f2a6224258.jpg'
+      ]},
+      {id:'cal21', category:'CALZADOS', name:'Jordan 1 Low Mocha', price:110000, sizes:[39,40,41,42,43], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/82d221ae2096b46d6851a2e2cfe4d551b0e43858086ab851a1b32f8068c30746224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/8c51f2fd98b66def13ff1fabb5de6080e5ae60a5caeef5dafc1f109154cacb7a224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/a977c6a0c66d4c2ee44c40eef539b7824e70d913a04bd04ae1bfec2bd5332571224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/5928024e6b5574e93afc4cce875446dffdefe628486891592fd506cf184fd702224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/ad946751302ac21410da01d512eeda9649191cefc140e609cb64e45ededb8b6d224258.jpg'
+      ]},
+      {id:'cal22', category:'CALZADOS', name:'DC Court Graffik White', price:110000, sizes:[40,42], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/e4950a393df0d8dc3ce3b5217f63d405707d9a1e7a7d646415130a24edb00a42224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/85c801c593e44729ca5bfc5ecf56330219bae45dc992fe3575552c4cb09918d2224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/d343d76e68af17221030895938735c763471df6352518082c5eee6f2ba060117224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/f1d3476ec606930c96501d1482c407ef7dc5aa1a44d986b30b1735bee6817a16224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/ba38ad4c397e9675552648a276e5a39b1cbd86c7e75007b31b7400b21d321840224258.jpg'
+      ]},
+      {id:'cal23', category:'CALZADOS', name:'Vans Hylane White', price:110000, sizes:[42], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/e49409c1fa99898d8758222ad791cbf9f74edbe7f53113b39dd2de7cf13f0056224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/cd59a0553e37d5fee4cef64adb2cf00f68e9d975b32efeca67279e53fb75047b224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/6e74e257ee11fb8703caf386ccd2b462844b11c90abcc0b17766bef280bc8fc6224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/e13347c5687bb55da4dad6c82c5e0c8b93d65ab4879ac78700255a0421148ef5224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/053b47342e74e78ecd7ac7f04127fac42dd907f663535089bbb100b66bb57c51224258.jpg'
+      ]},
+      {id:'cal24', category:'CALZADOS', name:'Jordan 1 Low Game Royal', price:110000, sizes:[39,40,41,42,43], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/7eda57b621ad5c8567f0a6635031e9222dfb4d5c3fa1c3b15f5e85e6bce6185a224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/62d599ad2f65f48bc34d46e3cccd0d84e9896de85884a22d830335e159298ddf224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/bd5dccadecf2761eb58fc0525a41ae0dd81b6aeb54005e33620204ba45563492224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/def5c0cc78ce7fa4d9db5732edb6c7b43f6b1fa2746c25b36968c36b1820df36224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/5f18a35b850a84d11968ba465f45d534b612fb867aadf901b497c0053ccf27e3224258.jpg'
+      ]},
+      {id:'cal25', category:'CALZADOS', name:'Vans Knu DR', price:110000, sizes:[42,43,44], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/4558dc5d407574bad9bd93cc3a8155f718a905a65313dc3355512c3b36859424224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/54c2dbb1cad0d7381f36959c21c48f06b237d3dc1ec85fa7e34f850fcc0fb746224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/c64e9d3bfaaaaa8555d1850d0db8a6af78406a7b1c8ed2b8de47df89f6e9eb67224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/93bd5f2a3b42df1e00bba9493c68db32820b5a1d8144fc27d59774af2cc17425224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/cc4942cb6fea35d9372bad7367a090598cbe94f9a8b5ee87883f922d6138be9b224258.jpg'
+      ]},
+      {id:'cal26', category:'CALZADOS', name:'Vans Knu Dark White Sole', price:110000, sizes:[40,42], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/cf041c2b8b478b44a0f9798de2025d65177f60646baffb9140a436cfb04c1e7e224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/fdd5b40057ee887a93bb9e3a2e7252d97932444306c3b9895fa63535a116f000224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/b9acf1165e06a40f3ddc1fa768cdcea39df8fc1a99aabe9156ff9bfd1346a8a0224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/cf0bb7651c0a604ba97a7594c705ba2229d36ecf6294ff59d241ed53e9ebd90e224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/e9e58dbcc633dd86a21f21ec3b3724c2424988faab29559dedec6db67fa3ad68224258.jpg'
+      ]},
+      {id:'cal27', category:'CALZADOS', name:"Jordan 1 Low x Travis Scott 'Phantom'", price:110000, sizes:[39], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/016d2fb20babdd89c5617d11ccf289a8c97cef052a182b5f45d6dfc9d9d9bb3b224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/45ab3d616707425414df4552d1c1966cc6ce77ef93037f2da80f617b741fa0db224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/27fa3c18bde5b3e60ab3a01721fd63447b1ad5427d47bd5ad6a10dceff55a271224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/de4b9554d17555fad5bc417c9d44a9efd10b6adc57c61995b94561fb52d333fa224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/c6f4db29d6740f9b844225d8ac2fe5d00cf4c465ce8a52ec87776153ee16477f224258.jpg'
+      ]},
+      {id:'cal28', category:'CALZADOS', name:"Jordan 1 Low x Travis Scott 'Mocha'", price:110000, sizes:[39,40,41,43], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/cb2f5921f44b83da5be19276b1bb7a8754e75c730b7c2698dfc5f9c06784ccbc224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/40ebdf4bb8236f337613162d4c009f213f07ec8980f324b784de93251531e2a4224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/fa528abdfb5ff3ef37ff69085008a8f40032a20631895d0bf91572b54cae8e5c224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/9bbf0df0baa7150fc268a54a60bba13ad6b44c1dccd8d11f636460b70c2de00d224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/4d23f4e348e2bad443aabe07e2eb2fedd6b08386855293d432db221f7ee76a6f224258.jpg'
+      ]},
+      {id:'cal29', category:'CALZADOS', name:'Vans Knu Skool Total Black', price:110000, sizes:[37,38,39,40,41,42], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/d3c92ce8ba39be267c30f562907aa9e863fbf437a5ed15f9000f14a4db59dae8224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/12fdeb86af5a561d02586483e63b537fa04bf6b204acc877eab9a2e5a8838a75224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/f43579ca4a31070afed4bc7a555be81e0c73d8f5097084c48106a5f07b3d0495224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/e7baa23b097d9710da1e9d4d1ceea675a21dd800690ca7e239261057a9022e16224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/56ec70d59d9343667119578c8989cce23f2558284792eb1516279d72d6db1952224258.jpg'
+      ]},
+      {id:'cal30', category:'CALZADOS', name:'Campus 00s Black White', price:110000, sizes:[36,40,42,43,44], images:[
+        'https://d22fxaf9t8d39k.cloudfront.net/2049463f7f36f2ad63f2842d93b8b4310d5a756f8820fe69f5f70c8bf87af86f224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/247bbf96fa7a78b0ea2d234a55e1f5e8fa253478e31f3d4b6950ce7db04c994d224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/88494c7d6e55b4cd70abea56ba50fce8865519a112c3f1b38ff54d76cda60d0c224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/92aa4bcddc4a4776147b6ed5543a3b8e88ce178bc911e739b97b0b1a87a8ebcf224258.jpg',
+        'https://d22fxaf9t8d39k.cloudfront.net/4a5ecae51c29709394d71f026388b2a7363eb9c9ecd3fe5094aae742f81bdaa9224258.jpg'
+      ]}
+    ];
+
+    // teléfonos WhatsApp
+    const WHA_AGU = '5492352441553'; // Agustin
+    /**********************
+     * Render productos y categorías
+     **********************/
+    const productsContainer = document.getElementById('products');
+    const categoriesContainer = document.getElementById('categories');
+    const cartCountEl = document.getElementById('cartCount');
+    const cartPanel = document.getElementById('cartPanel');
+    const openCartBtn = document.getElementById('openCartBtn');
+    const cartItemsEl = document.getElementById('cartItems');
+    const cartTotalEl = document.getElementById('cartTotal');
+    const openFormBtn = document.getElementById('openFormBtn');
+    const modalBack = document.getElementById('modalBack');
+    const orderForm = document.getElementById('orderForm');
+    const whatsappBtns = document.getElementById('whatsappBtns');
+    const waEzeBtn = document.getElementById('waEze');
+    const waLucBtn = document.getElementById('waLuc');
+    const closeModalBtn = document.getElementById('closeModal');
+    const clearFilterBtn = document.getElementById('clearFilter');
+
+    // obtené categorías únicas
+    const CATS = [...new Set(PRODUCTS.map(p=>p.category))];
+    let activeCat = null;
+
+    function renderCategories(){
+      categoriesContainer.innerHTML = '';
+      CATS.forEach(cat=>{
+        const b = document.createElement('button');
+        b.className='category-btn';
+        b.textContent = cat;
+        b.onclick = ()=>{ activeCat = cat; document.querySelectorAll('.category-btn').forEach(n=>n.classList.remove('active')); b.classList.add('active'); renderProducts(); }
+        categoriesContainer.appendChild(b);
+      });
+    }
+    clearFilterBtn.addEventListener('click', ()=>{
+      activeCat = null;
+      document.querySelectorAll('.category-btn').forEach(n=>n.classList.remove('active'));
+      renderProducts();
+    });
+
+    function renderProducts(){
+      productsContainer.innerHTML='';
+      const list = activeCat ? PRODUCTS.filter(p=>p.category===activeCat) : PRODUCTS;
+      list.forEach(p=>{
+        const card = document.createElement('div'); card.className='card';
+        // gallery
+        const gallery = document.createElement('div'); gallery.className='gallery';
+        const img = document.createElement('img'); img.src = p.images[0];
+        gallery.appendChild(img);
+
+        if(p.images.length>1){
+          const left = document.createElement('div'); left.className='nav left'; left.textContent='‹';
+          const right = document.createElement('div'); right.className='nav right'; right.textContent='›';
+          let idx = 0;
+          left.onclick = ()=>{ idx = (idx-1 + p.images.length)%p.images.length; img.src = p.images[idx]; }
+          right.onclick = ()=>{ idx = (idx+1)%p.images.length; img.src = p.images[idx]; }
+          gallery.appendChild(left); gallery.appendChild(right);
+        }
+        card.appendChild(gallery);
+
+       const name = document.createElement('div'); 
+name.className = 'product-name'; 
+name.textContent = p.name;
+
+const price = document.createElement('div'); 
+price.className = 'price'; 
+price.textContent = '$' + numberWithDots(p.price);
+card.appendChild(name);
+card.appendChild(price);
+
+// Si el producto tiene talles, crear selector
+let sizeSelect = null;
+if (p.sizes) {
+  sizeSelect = document.createElement('select');
+  sizeSelect.innerHTML = '<option value="">Seleccionar talle</option>' + 
+    p.sizes.map(t => `<option value="${t}">${t}</option>`).join('');
+  sizeSelect.style.padding = '6px';
+  sizeSelect.style.borderRadius = '6px';
+  sizeSelect.style.background = '#0a0a0a';
+  sizeSelect.style.color = '#fff';
+  sizeSelect.style.border = '1px solid rgba(255,255,255,0.1)';
+  card.appendChild(sizeSelect);
+}
+        
+        const actions = document.createElement('div'); actions.className='actions';
+        const add = document.createElement('button'); add.className='add'; add.textContent='Agregar al carrito';
+       add.onclick = ()=> {
+  if (p.sizes && sizeSelect && !sizeSelect.value) {
+    alert('Por favor, seleccioná un talle antes de agregar al carrito.');
+    return;
+  }
+  addToCart(p.id, sizeSelect ? sizeSelect.value : null);
+};
+
+        const view = document.createElement('button'); view.className='view'; view.textContent='Ver';
+        view.onclick = ()=> openQuickView(p);
+        actions.appendChild(add); actions.appendChild(view);
+        card.appendChild(actions);
+
+        productsContainer.appendChild(card);
+      });
+    }
+
+    // quick view (simple)
+    function openQuickView(p){
+      const sizeInfo = p.sizes ? "\nTalles: " + p.sizes.join(', ') : '';
+      alert(p.name + "\nPrecio: $" + numberWithDots(p.price) + "\nCategoría: " + p.category + sizeInfo);
+    }
+
+    /**********************
+     * Carrito (localStorage)
+     **********************/
+    function loadCart(){ return JSON.parse(localStorage.getItem('ad_cart')||'{}'); }
+    function saveCart(c){ localStorage.setItem('ad_cart', JSON.stringify(c)); updateCartUI(); }
+    function addToCart(id, size=null){
+  const cart = loadCart();
+  const key = size ? `${id}_${size}` : id; // ID combinado si tiene talle
+  cart[key] = (cart[key]||0) + 1;
+  saveCart(cart);
+    }
+    
+    function removeFromCart(id){
+      const cart = loadCart();
+      delete cart[id];
+      saveCart(cart);
+    }
+    function changeQty(id, qty){
+      const cart = loadCart();
+      if(qty<=0) delete cart[id]; else cart[id] = qty;
+      saveCart(cart);
+    }
+    function updateCartUI(){
+      const cart = loadCart();
+      const entries = Object.entries(cart);
+      cartCountEl.textContent = entries.reduce((s,[_id,q])=>s+q,0);
+      cartItemsEl.innerHTML = '';
+      let total = 0;
+      if(entries.length===0){
+        cartItemsEl.innerHTML = '<div style="color:var(--muted)">El carrito está vacío.</div>';
+      } else {
+        entries.forEach(([id,qty])=>{
+          const [pid, size] = id.split('_');
+          const prod = PRODUCTS.find(p=>p.id===pid);
+          if(!prod) return;
+          const row = document.createElement('div'); row.className='cart-item';
+          const img = document.createElement('img'); img.src = prod.images[0];
+          const info = document.createElement('div'); info.style.flex='1';
+          const sizeTxt = size ? ` — Talle: ${size}` : '';
+          info.innerHTML = `<div style="font-weight:700">${prod.name}</div><div style="color:var(--muted)">x ${qty} — $${numberWithDots(prod.price)}${sizeTxt}</div>`;
+          const qtyCtrl = document.createElement('div'); qtyCtrl.style.display='flex'; qtyCtrl.style.flexDirection='column';
+          const inc = document.createElement('button'); inc.textContent = '+'; inc.style.marginBottom='6px';
+          const dec = document.createElement('button'); dec.textContent = '-';
+          inc.onclick = ()=> changeQty(id, qty+1);
+          dec.onclick = ()=> changeQty(id, qty-1);
+          qtyCtrl.appendChild(inc); qtyCtrl.appendChild(dec);
+          const del = document.createElement('button'); del.textContent='Eliminar'; del.style.marginLeft='8px';
+          del.onclick = ()=> removeFromCart(id);
+          row.appendChild(img); row.appendChild(info); row.appendChild(qtyCtrl); row.appendChild(del);
+          cartItemsEl.appendChild(row);
+          total += prod.price * qty;
+        });
+      }
+      cartTotalEl.textContent = numberWithDots(total);
+    }
+
+    openCartBtn.addEventListener('click', ()=>{
+      cartPanel.style.display = cartPanel.style.display==='none'?'block':'none';
+      updateCartUI();
+    });
+
+    // helpers
+    function numberWithDots(x){ return String(x).replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
+
+/**************************************
+ * Verificación de compra mínima (solo categorías restringidas)
+ **************************************/
+function cumpleCompraMinima() {
+  const cart = loadCart();
+  const entries = Object.entries(cart);
+  if (entries.length === 0) return false;
+
+  // Categorías sujetas a compra mínima
+  const CATS_MIN = ['AURICULARES', 'PARLANTES', 'CABLES Y CARGADORES', 'SMARTWATCHS', 'PRODUCTOS VARIADOS'];
+
+  let totalRestrictas = 0;
+  let tieneRestrictas = false;
+
+  entries.forEach(([id, qty]) => {
+    const [pid] = id.split('_');
+    const p = PRODUCTS.find(x => x.id === pid);
+    if (!p) return;
+
+    // Si pertenece a las categorías restringidas, sumar
+    if (CATS_MIN.includes(p.category)) {
+      totalRestrictas += p.price * qty;
+      tieneRestrictas = true;
+    }
+  });
+
+  // Si no hay productos de esas categorías, no hay restricción
+  if (!tieneRestrictas) return true;
+
+  // Si hay productos restringidos y el total de esos productos es menor a 60.000, no cumple
+  if (totalRestrictas < 60000) return false;
+
+  return true;
+}
+    
+    // form workflow
+    openFormBtn.addEventListener('click', ()=>{
+  const cart = loadCart();
+  if(Object.keys(cart).length===0){ 
+    alert('El carrito está vacío. Agregá productos antes de rellenar el formulario.'); 
+    return; 
+  }
+
+  // 🚨 Verificar compra mínima solo en categorías específicas
+  if(!cumpleCompraMinima()){
+    alert('La compra mínima para productos de las categorías AURICULARES, PARLANTES, CABLES Y CARGADORES, SMARTWATCHS o PRODUCTOS VARIADOS debe ser de $60.000 (solo se cuenta el total de esos productos).');
+    return;
+  }
+
+  modalBack.style.display='flex';
+  whatsappBtns.style.display='none';
+  document.getElementById('whatsappBtns').style.display='none';
+    });
+
+    closeModalBtn.addEventListener('click', ()=>{ modalBack.style.display='none'; });
+
+    orderForm.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      // show whatsapp buttons with order preview
+      whatsappBtns.style.display='block';
+      document.getElementById('whatsappBtns').style.display='block';
+      alert('Datos confirmados. Seleccioná el botón del vendedor para enviar tu pedido por WhatsApp (Agustin).');
+      // store form data temporarily
+      const fd = new FormData(orderForm);
+      window._orderData = Object.fromEntries(fd.entries());
+    });
+
+    // construir mensaje para wa
+    function buildOrderMessage(empName){
+  const cart = loadCart();
+  const productsList = Object.entries(cart).map(([id,qty])=>{
+    const [pid, size] = id.split('_'); // separa ID y talle si lo hay
+    const p = PRODUCTS.find(x=>x.id===pid);
+    if (!p) return '';
+    const sizeTxt = size ? ` — Talle: ${size}` : ''; // muestra talle seleccionado
+    return `${qty} x ${p.name}${sizeTxt} — $${numberWithDots(p.price)} (subtotal: $${numberWithDots(p.price*qty)})`;
+  }).join('%0A');
+
+    const total = Object.entries(cart).reduce((s,[id,qty])=>{
+  const [pid] = id.split('_'); // separa id y talle
+  const p = PRODUCTS.find(x=>x.id===pid);
+  return s + (p ? p.price * qty : 0);
+},0);
+      
+      const d = window._orderData || {};
+      let msg = `*Nuevo pedido*%0A%0A*Productos:*%0A${productsList}%0A%0A*Total:* $${numberWithDots(total)}%0A%0A*Cliente:* ${encodeURIComponent(d.nombre||'')}%0A*Teléfono:* ${encodeURIComponent(d.telefono||'')}%0A*Dirección:* ${encodeURIComponent(d.direccion||'')}%0A*CP:* ${encodeURIComponent(d.cp||'')}%0A*Provincia:* ${encodeURIComponent(d.provincia||'')}%0A*Ciudad:* ${encodeURIComponent(d.ciudad||'')}%0A*Tipo domicilio:* ${encodeURIComponent(d.tipo||'')}%0A*Indicaciones:* ${encodeURIComponent(d.indicaciones||'')}%0A%0A*Vendedor:* ${empName}%0A%0A*Enviado desde:* AD - Distribución Confiable`;
+      return msg;
+    }
+
+/**************************************
+ * Botones de WhatsApp (FINAL)
+ **************************************/
+const waButtons = [
+  { id: 'waAgu', name: 'Agustin', number: WHA_AGU },
+];
+
+waButtons.forEach(({ id, name, number }) => {
+  const btn = document.getElementById(id);
+  if (btn) {
+    btn.addEventListener('click', () => {
+      const msg = buildOrderMessage(name);
+      const url = `https://wa.me/${number}?text=${msg}`;
+      window.open(url, '_blank');
+    });
+  }
+});
+
+    // init
+    renderCategories();
+    renderProducts();
+    updateCartUI();
+
+    if(Object.keys(loadCart()).length>0) cartPanel.style.display='block';
+  </script>
+</body>
+</html>
