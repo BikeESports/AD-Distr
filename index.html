@@ -711,8 +711,8 @@ function cumpleCompraMinima() {
   // Si no hay productos de esas categorías, no hay restricción
   if (!tieneRestrictas) return true;
 
-  // Si hay productos restringidos y el total de esos productos es menor a 60.000, no cumple
-  if (totalRestrictas < 60000) return false;
+  // Si hay productos restringidos y el total de esos productos es menor a 120.000, no cumple
+  if (totalRestrictas < 120000) return false;
 
   return true;
 }
